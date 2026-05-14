@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register - CarSpot.lk</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div class="auth-page">
+
+  <!-- LEFT VISUAL PANEL -->
+  <div class="auth-visual">
+    <div class="auth-visual-inner">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">🚗 CarSpot.lk</div>
+      <h2>Join<br><span>CarSpot.lk</span><br>Today</h2>
+      <p>Whether you're buying your next car or selling your current one — we've got you covered.</p>
+
+      <!-- Role cards -->
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:26px">🛒</div>
+          <div>
+            <div style="font-weight:800;font-size:14px">Buyer Account</div>
+            <div style="font-size:12px;opacity:0.7;margin-top:2px">Browse cars, make offers, track your purchases</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:26px">🏷</div>
+          <div>
+            <div style="font-weight:800;font-size:14px">Individual Seller</div>
+            <div style="font-size:12px;opacity:0.7;margin-top:2px">List your personal car, manage offers from buyers</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:26px">🏢</div>
+          <div>
+            <div style="font-weight:800;font-size:14px">Car Dealer</div>
+            <div style="font-size:12px;opacity:0.7;margin-top:2px">List multiple vehicles, build your dealer profile</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.12);font-size:12px;opacity:0.6">
+        ✅ Free to register &nbsp;·&nbsp; ✅ No credit card needed &nbsp;·&nbsp; ✅ Instant access
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT FORM PANEL -->
+  <div class="auth-form-side">
+    <div class="auth-card" style="max-width:480px">
+      <h2>Create Account</h2>
+      <p class="subtitle">Join CarSpot.lk — free for buyers &amp; sellers</p>
+
+      <div id="alertBox"></div>
+
+      <!-- Account Type Tabs -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px" id="roleTabs">
+        <button type="button" class="role-tab active" data-role="BUYER" onclick="selectRole('BUYER')">
+          <span style="font-size:18px;display:block;margin-bottom:4px">🛒</span>
+          <span style="font-size:12px;font-weight:700">Buyer</span>
+        </button>
+        <button type="button" class="role-tab" data-role="SELLER" onclick="selectRole('SELLER')">
+          <span style="font-size:18px;display:block;margin-bottom:4px">🏷</span>
+          <span style="font-size:12px;font-weight:700">Seller</span>
+        </button>
+        <button type="button" class="role-tab" data-role="DEALER" onclick="selectRole('DEALER')">
+          <span style="font-size:18px;display:block;margin-bottom:4px">🏢</span>
+          <span style="font-size:12px;font-weight:700">Dealer</span>
+        </button>
+      </div>
+      <input type="hidden" id="role" value="BUYER">
+
+      <!-- Role description chip -->
+      <div id="roleDesc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--muted);margin-bottom:20px">
+        🛒 You'll be able to browse cars, make purchase offers, and track your buying history.
+      </div>
+
+      <form onsubmit="doRegister(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <div class="input-icon-wrap">
+              <span class="icon">👤</span>
+              <input class="form-input" id="name" placeholder="Your full name" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <div class="input-icon-wrap">
+              <span class="icon">📞</span>
+              <input class="form-input" id="phone" placeholder="+94 77 123 4567">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-icon-wrap">
+            <span class="icon">✉️</span>
+            <input class="form-input" type="email" id="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">City / Address</label>
+          <div class="input-icon-wrap">
+            <span class="icon">📍</span>
+            <input class="form-input" id="address" placeholder="Colombo, Kandy, Galle...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-icon-wrap">
+            <span class="icon">🔒</span>
+            <input class="form-input" type="password" id="password" placeholder="Minimum 6 characters" required minlength="6">
+          </div>
+          <div id="passwordStrength" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+        </div>
+
+        <!-- Seller/Dealer note -->
+        <div id="approvalNote" style="display:none;background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#854d0e;margin-bottom:18px">
+          ✅ You can list cars immediately after registering. Each listing is reviewed by admin before going public.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="regBtn" style="font-size:15px;padding:14px">
+          🚀 Create Account
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:22px;font-size:13.5px;color:var(--muted)">
+        Already have an account?
+        <a href="signin.html" style="color:var(--primary-light);font-weight:700;text-decoration:none">Sign in →</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+.role-tab {
+    padding: 12px 8px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s;
+    color: var(--muted);
+}
+.role-tab:hover { border-color: var(--primary-light); color: var(--primary-light); }
+.role-tab.active { border-color: var(--primary-light); background: #eff6ff; color: var(--primary-light); }
+</style>
+
+<script src="js/main.js"></script>
+<script>
+const roleDescriptions = {
+    BUYER: '🛒 You\'ll be able to browse cars, make purchase offers, and track your buying history.',
+    SELLER: '🏷 List your vehicle, manage incoming offers, and record completed sales. Each listing needs admin approval.',
+    DEALER: '🏢 List multiple vehicles as a dealership. Admin will verify your account before activation.'
+};
+
+window.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    renderNavbar();
+    if (currentRole) window.location.href = 'index.html';
+
+    document.getElementById('password').addEventListener('input', function() {
+        const len = this.value.length;
+        const el = document.getElementById('passwordStrength');
+        if (!len) { el.textContent = ''; return; }
+        if (len < 6) { el.textContent = '⚠️ Too short — need at least 6 characters'; el.style.color = 'var(--danger)'; }
+        else if (len < 10) { el.textContent = '⚡ Fair password'; el.style.color = 'var(--warning)'; }
+        else { el.textContent = '✅ Strong password'; el.style.color = 'var(--success)'; }
+    });
+});
+
+function selectRole(role) {
+    document.getElementById('role').value = role;
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.toggle('active', t.dataset.role === role));
+    document.getElementById('roleDesc').textContent = roleDescriptions[role];
+    document.getElementById('approvalNote').style.display = (role === 'SELLER' || role === 'DEALER') ? 'block' : 'none';
+}
+
+async function doRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+    const { ok, data } = await api('POST', '/api/auth/register', {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        password: document.getElementById('password').value,
+        role: document.getElementById('role').value
+    });
+    btn.disabled = false; btn.textContent = '🚀 Create Account';
+    if (ok) {
+        showAlert('alertBox', 'Account created successfully! Redirecting...', 'success');
+        setTimeout(() => window.location.href = data.redirectPage || 'index.html', 1400);
+    } else {
+        showAlert('alertBox', data.message || 'Registration failed. Check that all fields are filled and try again.');
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users & Members - CarSpot.lk</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div style="background:linear-gradient(135deg,var(--primary) 0%,var(--primary-mid) 60%,#1d4ed8 100%);color:white;padding:48px 0 40px">
+  <div class="container">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">Find Your Seller</div>
+    <h1 style="font-size:36px;font-weight:900;letter-spacing:-0.5px;margin-bottom:10px">Users &amp; Members</h1>
+    <p style="font-size:15px;opacity:0.82;max-width:500px;line-height:1.6">Connect with individual sellers and licensed car dealers across Sri Lanka.</p>
+    <div style="display:flex;gap:18px;margin-top:24px;flex-wrap:wrap">
+      <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:7px 16px;font-size:12px;font-weight:700">✅ All Verified</div>
+      <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:7px 16px;font-size:12px;font-weight:700">⭐ Rated by Buyers</div>
+      <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:7px 16px;font-size:12px;font-weight:700">📍 Island-Wide</div>
+    </div>
+  </div>
+</div>
+
+<div class="container page-section">
+  <!-- Tabs: Sellers / All Users -->
+  <div style="display:flex;gap:8px;margin-bottom:22px;border-bottom:2px solid var(--border);padding-bottom:0">
+    <button class="btn btn-primary btn-sm" id="tabSellers" onclick="switchTab('sellers')" style="border-radius:8px 8px 0 0">🏷 Sellers &amp; Dealers</button>
+    <button class="btn btn-ghost btn-sm" id="tabBuyers" onclick="switchTab('buyers')" style="border-radius:8px 8px 0 0">👥 All Members</button>
+  </div>
+
+  <!-- Sellers panel -->
+  <div id="panelSellers">
+    <div class="search-bar">
+      <div class="input-icon-wrap" style="flex:1;min-width:180px">
+        <span class="icon">🔍</span>
+        <input class="form-input" id="nameSearch" placeholder="Search by name..." oninput="debouncedSearch()">
+      </div>
+      <div class="input-icon-wrap" style="width:200px">
+        <span class="icon">📍</span>
+        <input class="form-input" id="locationSearch" placeholder="Location..." oninput="debouncedSearch()">
+      </div>
+      <select class="form-select" id="typeFilter" onchange="debouncedSearch()" style="width:160px">
+        <option value="">All Types</option>
+        <option value="individual">Individual</option>
+        <option value="dealer">Dealer</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadSellers()">Search</button>
+    </div>
+    <div id="alertBox"></div>
+    <div class="section-header">
+      <div>
+        <h2 class="page-title" style="font-size:20px;margin-bottom:2px">Sellers &amp; Dealers</h2>
+        <p class="page-subtitle" style="margin-bottom:0" id="sellerCount"></p>
+      </div>
+    </div>
+    <div class="loading-wrap" id="loadingWrap"><div class="spinner"></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px" id="sellerGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="icon">🏷</div>
+      <p>No sellers found matching your search.</p>
+      <button class="btn btn-outline" style="margin-top:14px" onclick="clearSearch()">Clear Search</button>
+    </div>
+  </div>
+
+  <!-- All Members (buyers + sellers + dealers) panel -->
+  <div id="panelBuyers" style="display:none">
+    <div class="search-bar">
+      <div class="input-icon-wrap" style="flex:1">
+        <span class="icon">🔍</span>
+        <input class="form-input" id="memberSearch" placeholder="Search members by name or email..." oninput="searchMembers()">
+      </div>
+      <select class="form-select" id="memberRoleFilter" onchange="searchMembers()" style="width:160px">
+        <option value="">All Roles</option>
+        <option value="BUYER">Buyers</option>
+        <option value="SELLER">Sellers</option>
+        <option value="DEALER">Dealers</option>
+      </select>
+    </div>
+    <div class="loading-wrap" id="membersLoading" style="display:none"><div class="spinner"></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px" id="memberGrid"></div>
+    <div class="empty-state" id="membersEmpty" style="display:none">
+      <div class="icon">👥</div><p>No members found.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section" style="padding:56px 0">
+  <div class="container">
+    <h2 style="font-size:28px">Want to Sell Your Car?</h2>
+    <p>Register as a seller and list your vehicle for free. Reach thousands of buyers across Sri Lanka.</p>
+    <div class="cta-actions">
+      <a href="register.html" class="btn btn-accent" style="font-size:15px;padding:13px 28px">🏷 Register as Seller</a>
+      <a href="browse.html" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.4);font-size:15px;padding:13px 28px">🔍 Browse Cars</a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo-text">🚗 Car<span>Spot</span>.lk</div>
+        <p>Sri Lanka's trusted platform for buying and selling second-hand vehicles.</p>
+      </div>
+      <div class="footer-col"><h4>For Buyers</h4><a href="browse.html">Browse Cars</a><a href="sellers.html">Find Sellers</a><a href="register.html">Create Account</a></div>
+      <div class="footer-col"><h4>For Sellers</h4><a href="register.html">Register as Seller</a><a href="seller-dashboard.html">My Listings</a></div>
+      <div class="footer-col"><h4>Platform</h4><a href="index.html">Home</a><a href="#">Contact Us</a></div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 CarSpot.lk. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Seller Detail Modal -->
+<div class="modal-overlay" id="sellerModal">
+  <div class="modal" style="max-width:580px">
+    <button class="modal-close" onclick="closeSellerModal()">×</button>
+    <div id="sellerModalContent"></div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeReviewModal()">×</button>
+    <h3 class="modal-title">⭐ Leave a Review</h3>
+    <p style="color:var(--muted);font-size:13px;margin-top:-14px;margin-bottom:20px">Share your experience with this seller.</p>
+    <div id="reviewAlert"></div>
+    <input type="hidden" id="reviewTargetId">
+    <input type="hidden" id="reviewTargetType">
+    <div class="form-group">
+      <label class="form-label">Your Rating</label>
+      <div id="starPicker" style="font-size:38px;cursor:pointer;letter-spacing:6px;margin-bottom:4px">
+        <span onclick="setRating(1)">☆</span><span onclick="setRating(2)">☆</span>
+        <span onclick="setRating(3)">☆</span><span onclick="setRating(4)">☆</span>
+        <span onclick="setRating(5)">☆</span>
+      </div>
+      <div id="ratingLabel" style="font-size:12px;color:var(--muted);height:16px"></div>
+      <input type="hidden" id="reviewRating" value="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Comment</label>
+      <textarea class="form-textarea" id="reviewComment" placeholder="Describe your experience..."></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" style="font-size:15px;padding:13px" onclick="submitReview()">Submit Review</button>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+let allSellers = [], allMembers = [];
+let searchTimeout;
+const ratingLabels = ['','⭐ Poor','⭐⭐ Fair','⭐⭐⭐ Good','⭐⭐⭐⭐ Very Good','⭐⭐⭐⭐⭐ Excellent'];
+
+window.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    renderNavbar();
+    loadSellers();
+});
+
+function switchTab(tab) {
+    document.getElementById('panelSellers').style.display = tab === 'sellers' ? 'block' : 'none';
+    document.getElementById('panelBuyers').style.display  = tab === 'buyers'  ? 'block' : 'none';
+    document.getElementById('tabSellers').className = tab === 'sellers' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+    document.getElementById('tabBuyers').className  = tab === 'buyers'  ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+    if (tab === 'buyers') { allMembers = []; loadMembers(); }
+}
+
+// ── SELLERS TAB ─────────────────────────────
+function debouncedSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(loadSellers, 380);
+}
+
+function clearSearch() {
+    document.getElementById('nameSearch').value = '';
+    document.getElementById('locationSearch').value = '';
+    document.getElementById('typeFilter').value = '';
+    loadSellers();
+}
+
+async function loadSellers() {
+    const name     = document.getElementById('nameSearch').value;
+    const location = document.getElementById('locationSearch').value;
+    const type     = document.getElementById('typeFilter').value;
+
+    document.getElementById('loadingWrap').style.display = 'flex';
+    document.getElementById('sellerGrid').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+
+    // FIX: fetch all sellers without filtering on server — filter client side
+    const { ok, data } = await api('GET',
+        `/api/sellers?name=${encodeURIComponent(name)}&location=${encodeURIComponent(location)}`);
+    document.getElementById('loadingWrap').style.display = 'none';
+    if (!ok) { showAlert('alertBox', 'Failed to load sellers.'); return; }
+
+    allSellers = data.sellers || [];
+    // FIX: show sellers of matching type — don't filter by approved here
+    const filtered = type ? allSellers.filter(s => s.type === type) : allSellers;
+
+    document.getElementById('sellerCount').textContent =
+        `${filtered.length} seller${filtered.length !== 1 ? 's' : ''} found`;
+
+    if (!filtered.length) { document.getElementById('emptyState').style.display = 'block'; return; }
+
+    document.getElementById('sellerGrid').style.display = 'grid';
+    document.getElementById('sellerGrid').innerHTML = filtered.map(s => sellerCard(s)).join('');
+}
+
+function sellerCard(s) {
+    const isDealer = s.type === 'dealer';
+    return `
+    <div class="seller-card" onclick="openSeller(${s.id})">
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+        <div class="seller-avatar ${isDealer ? 'seller-avatar-dealer' : 'seller-avatar-individual'}">${isDealer ? '🏢' : '👤'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:17px;margin-bottom:5px">${s.name}</div>
+          <span class="badge badge-${isDealer ? 'dealer' : 'seller'}">${isDealer ? 'Dealer' : 'Individual Seller'}</span>
+          ${s.approved ? '' : '<span class="badge badge-pending" style="margin-left:4px">Pending</span>'}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;font-size:13px;color:var(--muted)">
+        ${s.location ? `<div>📍 ${s.location}</div>` : ''}
+        ${s.contact  ? `<div>📞 ${s.contact}</div>`  : ''}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();openSeller(${s.id})">View Profile</button>
+        ${currentRole && !['ADMIN','SUPERADMIN','SELLER','DEALER'].includes(currentRole?.toUpperCase()) ? `
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openReview(${s.id},'seller')">⭐</button>` : ''}
+      </div>
+    </div>`;
+}
+
+async function openSeller(id) {
+    const s = allSellers.find(x => x.id === id);
+    if (!s) return;
+    const { data: rvData } = await api('GET', `/api/reviews/seller/${id}`);
+    const reviews = rvData?.reviews || [];
+    const avg = rvData?.averageRating || 0;
+    const isDealer = s.type === 'dealer';
+    document.getElementById('sellerModalContent').innerHTML = `
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:20px">
+          <div class="seller-avatar ${isDealer ? 'seller-avatar-dealer' : 'seller-avatar-individual'}" style="width:72px;height:72px;border-radius:18px;font-size:30px">${isDealer ? '🏢' : '👤'}</div>
+          <div>
+            <h2 style="font-size:22px;font-weight:900;margin-bottom:6px">${s.name}</h2>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="badge badge-${isDealer ? 'dealer' : 'seller'}">${isDealer ? 'Dealer' : 'Individual Seller'}</span>
+              ${avg > 0 ? `<span class="stars-sm">${renderStars(Math.round(avg))}</span><span style="font-size:12px;color:var(--muted);font-weight:600">${avg} (${reviews.length})</span>` : '<span style="font-size:12px;color:var(--muted)">No reviews yet</span>'}
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+          ${s.location ? `<div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px">Location</span>📍 ${s.location}</div>` : ''}
+          ${s.contact  ? `<div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px">Phone</span>📞 ${s.contact}</div>`  : ''}
+          ${s.email    ? `<div style="background:var(--bg);border-radius:8px;padding:12px;font-size:13px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px">Email</span>✉️ ${s.email}</div>`    : ''}
+        </div>
+        ${currentRole && !['ADMIN','SUPERADMIN','SELLER','DEALER'].includes(currentRole?.toUpperCase()) ? `
+          <button class="btn btn-accent btn-full" style="margin-bottom:20px;font-size:14px;padding:12px" onclick="closeSellerModal();openReview(${s.id},'seller')">⭐ Leave a Review</button>` :
+          !currentRole ? `<a href="signin.html" class="btn btn-primary btn-full" style="margin-bottom:20px;font-size:14px;padding:12px">🔓 Sign In to Leave a Review</a>` : ''}
+        ${reviews.length > 0 ? `
+          <hr class="divider">
+          <h4 style="font-weight:800;margin-bottom:14px">Reviews (${reviews.length})</h4>
+          ${reviews.slice(0,5).map(r => `
+            <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span class="stars-sm">${renderStars(r.rating)}</span>
+                <span style="font-size:11px;color:var(--muted)">${formatDate(r.createdAt)}</span>
+              </div>
+              <p style="font-size:13.5px;line-height:1.65">${r.comment||r.content||''}</p>
+            </div>`).join('')}` : ''}`;
+    document.getElementById('sellerModal').classList.add('active');
+}
+function closeSellerModal() { document.getElementById('sellerModal').classList.remove('active'); }
+
+// ── ALL MEMBERS TAB ─────────────────────────
+async function loadMembers() {
+    document.getElementById('membersLoading').style.display = 'flex';
+    document.getElementById('memberGrid').innerHTML = '';
+    // Use public endpoints - no admin required
+    const [usersRes, sellersRes] = await Promise.all([
+        api('GET', '/api/users/public'),          // public endpoint, all roles
+        api('GET', '/api/sellers')                 // public seller search
+    ]);
+    const buyers  = (usersRes.data.users   || [])
+                        .filter(u => u.role === 'BUYER' || !u.role)
+                        .map(u => ({...u, memberType: 'user'}));
+    const sellers = (sellersRes.data.sellers || [])
+                        .map(s => ({...s, memberType: 'seller', role: s.type?.toUpperCase() || 'SELLER'}));
+    // Show buyers + sellers + dealers all together
+    allMembers = [...sellers, ...buyers];
+    document.getElementById('membersLoading').style.display = 'none';
+    searchMembers();
+}
+
+function searchMembers() {
+    const q    = (document.getElementById('memberSearch').value || '').toLowerCase();
+    const role = document.getElementById('memberRoleFilter').value;
+    let filtered = allMembers;
+    if (q)    filtered = filtered.filter(m => m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
+    if (role) filtered = filtered.filter(m => (m.role||'').toUpperCase() === role || (m.type||'').toUpperCase() === role);
+
+    const el = document.getElementById('memberGrid');
+    document.getElementById('membersEmpty').style.display = filtered.length ? 'none' : 'block';
+    if (!filtered.length) { el.innerHTML = ''; return; }
+
+    el.innerHTML = filtered.map(m => {
+        const roleKey = (m.type ? m.type.toUpperCase() : m.role || 'BUYER').toUpperCase();
+        const isDealer = roleKey === 'DEALER';
+        const isSeller = roleKey === 'SELLER';
+        const icon = isDealer ? '🏢' : isSeller ? '🏷' : '🛒';
+        return `
+        <div class="card" style="padding:18px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <div style="width:44px;height:44px;border-radius:12px;background:${isDealer?'linear-gradient(135deg,#ede9fe,#ddd6fe)':isSeller?'linear-gradient(135deg,#d1fae5,#a7f3d0)':'linear-gradient(135deg,#dbeafe,#bfdbfe)'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${icon}</div>
+            <div style="min-width:0">
+              <div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name||'—'}</div>
+              <div>${roleBadge(roleKey)}</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">
+            ${m.email    ? `<div>✉️ ${m.email}</div>`    : ''}
+            ${m.location ? `<div>📍 ${m.location}</div>` : ''}
+            ${m.phone    ? `<div>📞 ${m.phone}</div>`    : ''}
+            ${m.contact  ? `<div>📞 ${m.contact}</div>`  : ''}
+          </div>
+        </div>`;
+    }).join('');
+}
+
+// ── REVIEWS ─────────────────────────────────
+function openReview(targetId, targetType) {
+    if (!currentRole) { window.location.href = 'signin.html'; return; }
+    document.getElementById('reviewTargetId').value = targetId;
+    document.getElementById('reviewTargetType').value = targetType;
+    document.getElementById('reviewRating').value = 0;
+    document.getElementById('reviewComment').value = '';
+    document.getElementById('reviewAlert').innerHTML = '';
+    setRating(0);
+    document.getElementById('reviewModal').classList.add('active');
+}
+function closeReviewModal() { document.getElementById('reviewModal').classList.remove('active'); }
+function setRating(val) {
+    document.getElementById('reviewRating').value = val;
+    document.getElementById('ratingLabel').textContent = ratingLabels[val] || '';
+    document.querySelectorAll('#starPicker span').forEach((s,i) => {
+        s.textContent = i < val ? '★' : '☆';
+        s.style.color = i < val ? 'var(--accent)' : 'var(--border)';
+    });
+}
+async function submitReview() {
+    const rating   = parseInt(document.getElementById('reviewRating').value);
+    const comment  = document.getElementById('reviewComment').value.trim();
+    const targetId = parseInt(document.getElementById('reviewTargetId').value);
+    const targetType = document.getElementById('reviewTargetType').value;
+    if (!rating)  { showAlert('reviewAlert', 'Please select a star rating.'); return; }
+    if (!comment) { showAlert('reviewAlert', 'Please write a comment.'); return; }
+    const { ok, data } = await api('POST', '/api/reviews', { targetId, targetType, rating, comment });
+    if (ok) { closeReviewModal(); showAlert('alertBox', 'Review submitted!','success'); loadSellers(); }
+    else showAlert('reviewAlert', data.message || 'Failed to submit review.');
+}
+</script>
+</body>
+</html>

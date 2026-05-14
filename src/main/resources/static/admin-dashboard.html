@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - CarSpot.lk</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div class="container page-section">
+  <div class="dashboard-layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">⚙️ Admin Panel</div>
+      <button class="sidebar-item active" id="tab-overview" onclick="showTab('overview')"><span class="icon">📊</span> Overview</button>
+      <button class="sidebar-item" id="tab-pending" onclick="showTab('pending')"><span class="icon">⏳</span> Pending Listings</button>
+      <button class="sidebar-item" id="tab-vehicles" onclick="showTab('vehicles')"><span class="icon">🚗</span> All Vehicles</button>
+      <button class="sidebar-item" id="tab-sellers" onclick="showTab('sellers')"><span class="icon">🏷</span> Sellers</button>
+      <button class="sidebar-item" id="tab-users" onclick="showTab('users')"><span class="icon">👥</span> Users</button>
+      <button class="sidebar-item" id="tab-reviews" onclick="showTab('reviews')"><span class="icon">⭐</span> Reviews</button>
+      <button class="sidebar-item" id="tab-admins" onclick="showTab('admins')"><span class="icon">🔑</span> Admins</button>
+      <button class="sidebar-item" style="color:var(--danger);margin-top:auto" onclick="logout()"><span class="icon">🚪</span> Sign Out</button>
+    </div>
+
+    <div style="min-width:0">
+      <div id="alertBox"></div>
+
+      <!-- Overview -->
+      <div id="panel-overview">
+        <h2 class="page-title">Admin Dashboard</h2>
+        <p class="page-subtitle">Platform overview and management</p>
+        <div class="stats-bar" style="margin-bottom:28px">
+          <div class="stat-card"><div class="stat-num" id="statUsers">—</div><div class="stat-label">Users</div></div>
+          <div class="stat-card"><div class="stat-num" id="statSellers">—</div><div class="stat-label">Sellers</div></div>
+          <div class="stat-card"><div class="stat-num" id="statVehicles">—</div><div class="stat-label">Vehicles</div></div>
+          <div class="stat-card" style="cursor:pointer" onclick="showTab('pending')">
+            <div class="stat-num" id="statPending" style="color:var(--warning)">—</div>
+            <div class="stat-label">⏳ Pending</div>
+          </div>
+          <div class="stat-card"><div class="stat-num" id="statReviews">—</div><div class="stat-label">Reviews</div></div>
+        </div>
+        <div class="alert alert-info">
+          💡 <strong>Note:</strong> Seller accounts are automatically approved on registration.
+          Only vehicle <strong>listings</strong> require your approval before going public.
+        </div>
+      </div>
+
+      <!-- Pending Vehicle Listings -->
+      <div id="panel-pending" style="display:none">
+        <div class="section-header">
+          <div>
+            <h2 class="page-title" style="font-size:20px;margin-bottom:2px">⏳ Pending Vehicle Listings</h2>
+            <p class="page-subtitle" style="margin-bottom:0">Approve or reject car listings submitted by sellers</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadPending()">↺ Refresh</button>
+        </div>
+        <div id="pendingList"></div>
+      </div>
+
+      <!-- All Vehicles -->
+      <div id="panel-vehicles" style="display:none">
+        <div class="section-header">
+          <h2 class="page-title" style="font-size:20px;margin-bottom:0">All Vehicles</h2>
+          <input class="form-input" id="vehicleSearch" placeholder="Search brand or model..." style="width:220px" oninput="searchVehicles()">
+        </div>
+        <div id="vehiclesList"></div>
+      </div>
+
+      <!-- Sellers -->
+      <div id="panel-sellers" style="display:none">
+        <div class="section-header">
+          <h2 class="page-title" style="font-size:20px;margin-bottom:0">Sellers &amp; Dealers</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadSellers()">↺ Refresh</button>
+        </div>
+        <div class="alert alert-info" style="margin-bottom:16px">
+          ℹ️ Seller accounts are now <strong>auto-approved</strong>. You can still delete fraudulent accounts below.
+        </div>
+        <div id="sellersList"></div>
+      </div>
+
+      <!-- Users -->
+      <div id="panel-users" style="display:none">
+        <div class="section-header">
+          <h2 class="page-title" style="font-size:20px;margin-bottom:0">Registered Users</h2>
+          <input class="form-input" id="userSearch" placeholder="Search name or email..." style="width:220px" oninput="searchUsers()">
+        </div>
+        <div id="usersList"></div>
+      </div>
+
+      <!-- Reviews -->
+      <div id="panel-reviews" style="display:none">
+        <h2 class="page-title" style="font-size:20px;margin-bottom:18px">All Reviews</h2>
+        <div id="reviewsList"></div>
+      </div>
+
+      <!-- Admins -->
+      <div id="panel-admins" style="display:none">
+        <div class="section-header">
+          <h2 class="page-title" style="font-size:20px;margin-bottom:0">Admin Accounts</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddAdmin()">+ Add Admin</button>
+        </div>
+        <div id="adminsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAdminModal()">×</button>
+    <h3 class="modal-title">Create Admin Account</h3>
+    <div id="adminAlert"></div>
+    <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="adminName" placeholder="Full name"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="adminEmail" placeholder="admin@CarSpot.lk"></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="adminPassword" placeholder="Min 6 characters"></div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-select" id="adminRole">
+        <option value="ADMIN">Admin</option>
+        <option value="SUPERADMIN">Super Admin</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="createAdmin()">Create Admin</button>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+let allVehicles = [], allUsers = [], allSellers = [];
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
+    renderNavbar();
+    loadOverview();
+});
+
+function showTab(tab) {
+    ['overview','pending','vehicles','sellers','users','reviews','admins'].forEach(t => {
+        document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    const loaders = { vehicles: loadVehicles, pending: loadPending, users: loadUsers, sellers: loadSellers, reviews: loadReviews, admins: loadAdmins };
+    if (loaders[tab]) loaders[tab]();
+}
+
+async function loadOverview() {
+    const [uRes, vRes, pRes, sRes, rRes] = await Promise.all([
+        api('GET', '/api/admin/users'),
+        api('GET', '/api/admin/vehicles'),
+        api('GET', '/api/vehicles/admin/pending'),
+        api('GET', '/api/admin/sellers'),
+        api('GET', '/api/admin/reviews')
+    ]);
+    document.getElementById('statUsers').textContent = (uRes.data.users||[]).length;
+    document.getElementById('statVehicles').textContent = (vRes.data.vehicles||[]).length;
+    const pending = (pRes.data.vehicles||[]).length;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statSellers').textContent = (sRes.data.sellers||[]).length;
+    document.getElementById('statReviews').textContent = (rRes.data.reviews||[]).length;
+    if (pending > 0) showAlert('alertBox', `⏳ You have ${pending} vehicle listing${pending > 1 ? 's' : ''} waiting for approval.`, 'warning');
+}
+
+// ═══ PENDING VEHICLE LISTINGS ═══
+async function loadPending() {
+    document.getElementById('pendingList').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    const { data } = await api('GET', '/api/vehicles/admin/pending');
+    const vehicles = data.vehicles || [];
+    if (!vehicles.length) {
+        document.getElementById('pendingList').innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>No pending vehicle listings.<br><small>All caught up!</small></p></div>`;
+        return;
+    }
+    document.getElementById('pendingList').innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Car</th><th>Price</th><th>Seller ID</th><th>Type</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <tbody>${vehicles.map(v => `<tr>
+          <td>#${v.id}</td>
+          <td><strong>${v.brand} ${v.model}</strong><br><small style="color:var(--muted)">${v.year} · ${(v.mileage||0).toLocaleString()} km</small></td>
+          <td><strong>${formatPrice(v.price)}</strong></td>
+          <td>#${v.sellerId}</td>
+          <td><span class="badge badge-${v.type === 'certified' ? 'certified' : 'used'}">${v.type||'used'}</span></td>
+          <td style="font-size:12px;color:var(--muted)">${formatDate(v.createdAt)}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-success btn-sm" onclick="approveVehicle(${v.id})">✓ Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectVehicle(${v.id})">✗ Reject</button>
+            </div>
+          </td>
+        </tr>`).join('')}</tbody></table></div>`;
+}
+
+async function approveVehicle(id) {
+    const { ok, data } = await api('POST', `/api/vehicles/admin/${id}/approve`);
+    showAlert('alertBox', ok ? 'Vehicle approved! It is now visible to buyers.' : (data.message||'Failed.'), ok ? 'success' : 'error');
+    if (ok) { loadPending(); loadOverview(); }
+}
+async function rejectVehicle(id) {
+    const { ok } = await api('POST', `/api/vehicles/admin/${id}/reject`);
+    showAlert('alertBox', ok ? '❌ Vehicle rejected.' : 'Failed.', ok ? 'success' : 'error');
+    if (ok) { loadPending(); loadOverview(); }
+}
+
+// ═══ ALL VEHICLES ═══
+async function loadVehicles() {
+    document.getElementById('vehiclesList').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    const { data } = await api('GET', '/api/admin/vehicles');
+    allVehicles = data.vehicles || [];
+    renderVehicles(allVehicles);
+}
+function searchVehicles() {
+    const q = document.getElementById('vehicleSearch').value.toLowerCase();
+    renderVehicles(allVehicles.filter(v =>
+        v.brand?.toLowerCase().includes(q) || v.model?.toLowerCase().includes(q)));
+}
+function renderVehicles(vehicles) {
+    if (!vehicles.length) { document.getElementById('vehiclesList').innerHTML = `<div class="empty-state"><div class="icon">🚗</div><p>No vehicles found.</p></div>`; return; }
+    document.getElementById('vehiclesList').innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Car</th><th>Price</th><th>Status</th><th>Type</th><th>Seller</th><th>Action</th></tr></thead>
+        <tbody>${vehicles.map(v => `<tr>
+          <td>#${v.id}</td>
+          <td><strong>${v.brand} ${v.model}</strong> <small style="color:var(--muted)">(${v.year})</small></td>
+          <td>${formatPrice(v.price)}</td>
+          <td>${statusBadge(v.status)}</td>
+          <td>${v.type||'used'}</td>
+          <td>#${v.sellerId}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${v.id})">Delete</button></td>
+        </tr>`).join('')}</tbody></table></div>`;
+}
+async function deleteVehicle(id) {
+    if (!confirm('Permanently delete this vehicle listing?')) return;
+    const { ok } = await api('DELETE', `/api/admin/vehicles/${id}`);
+    if (ok) { showAlert('alertBox', 'Vehicle deleted.', 'success'); loadVehicles(); }
+}
+
+// ═══ SELLERS — FIXED: uses /api/admin/sellers ═══
+async function loadSellers() {
+    document.getElementById('sellersList').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    const { ok, data } = await api('GET', '/api/admin/sellers');
+    allSellers = data.sellers || [];
+    if (!allSellers.length) {
+        document.getElementById('sellersList').innerHTML = `<div class="empty-state"><div class="icon">🏷</div><p>No sellers registered yet.</p></div>`;
+        return;
+    }
+    document.getElementById('sellersList').innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Contact</th><th>Location</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${allSellers.map(s => `<tr>
+          <td>#${s.id}</td>
+          <td><strong>${s.name}</strong></td>
+          <td>${s.email}</td>
+          <td>${s.contact||'—'}</td>
+          <td>${s.location||'—'}</td>
+          <td><span class="badge badge-${s.type === 'dealer' ? 'dealer' : 'seller'}">${s.type}</span></td>
+          <td>${s.approved
+              ? '<span class="badge badge-approved">✅ Approved</span>'
+              : '<span class="badge badge-pending">⏳ Pending</span>'}</td>
+          <td>
+            <div style="display:flex;gap:5px">
+              ${!s.approved ? `<button class="btn btn-success btn-sm" onclick="approveSeller(${s.id})">✓ Approve</button>` : ''}
+              <button class="btn btn-danger btn-sm" onclick="deleteSeller(${s.id})">Delete</button>
+            </div>
+          </td>
+        </tr>`).join('')}</tbody></table></div>`;
+}
+
+// FIXED: correct endpoint /api/admin/sellers/{id}/approve
+async function approveSeller(id) {
+    const { ok, data } = await api('POST', `/api/admin/sellers/${id}/approve`);
+    if (ok) {
+        showAlert('alertBox', 'Seller approved!', 'success');
+        loadSellers();
+    } else {
+        showAlert('alertBox', data.message || 'Failed to approve seller.');
+    }
+}
+async function deleteSeller(id) {
+    if (!confirm('Delete this seller account?')) return;
+    const { ok } = await api('DELETE', `/api/admin/sellers/${id}`);
+    if (ok) { showAlert('alertBox', 'Seller deleted.', 'success'); loadSellers(); }
+}
+
+// ═══ USERS ═══
+async function loadUsers() {
+    document.getElementById('usersList').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    const { data } = await api('GET', '/api/admin/users');
+    allUsers = data.users || [];
+    renderUsers(allUsers);
+}
+function searchUsers() {
+    const q = document.getElementById('userSearch').value.toLowerCase();
+    renderUsers(allUsers.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)));
+}
+function renderUsers(users) {
+    if (!users.length) { document.getElementById('usersList').innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>No users.</p></div>`; return; }
+    document.getElementById('usersList').innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Action</th></tr></thead>
+        <tbody>${users.map(u => `<tr>
+          <td>#${u.id}</td><td>${u.name}</td><td>${u.email}</td>
+          <td>${u.phone||'—'}</td>
+          <td><span class="badge badge-${(u.role||'buyer').toLowerCase()}">${u.role||'BUYER'}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Delete</button></td>
+        </tr>`).join('')}</tbody></table></div>`;
+}
+async function deleteUser(id) {
+    if (!confirm('Delete this user account?')) return;
+    const { ok } = await api('DELETE', `/api/admin/users/${id}`);
+    if (ok) { showAlert('alertBox', 'User deleted.', 'success'); loadUsers(); }
+}
+
+// ═══ REVIEWS ═══
+async function loadReviews() {
+    document.getElementById('reviewsList').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    const { data } = await api('GET', '/api/admin/reviews');
+    const reviews = data.reviews || [];
+    if (!reviews.length) { document.getElementById('reviewsList').innerHTML = `<div class="empty-state"><div class="icon">⭐</div><p>No reviews.</p></div>`; return; }
+    document.getElementById('reviewsList').innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Target</th><th>Rating</th><th>Comment</th><th>Action</th></tr></thead>
+        <tbody>${reviews.map(r => `<tr>
+          <td>#${r.id}</td>
+          <td>${r.targetType} #${r.targetId}</td>
+          <td><span class="stars-sm">${renderStars(r.rating)}</span></td>
+          <td style="max-width:220px;font-size:12px;color:var(--muted)">${r.comment||r.content||''}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteReview(${r.id})">Delete</button></td>
+        </tr>`).join('')}</tbody></table></div>`;
+}
+async function deleteReview(id) {
+    if (!confirm('Delete this review?')) return;
+    const { ok } = await api('DELETE', `/api/admin/reviews/${id}`);
+    if (ok) { showAlert('alertBox', 'Review deleted.', 'success'); loadReviews(); }
+}
+
+// ═══ ADMINS ═══
+async function loadAdmins() {
+    const { data } = await api('GET', '/api/admin/admins');
+    const admins = data.admins || [];
+    document.getElementById('adminsList').innerHTML = admins.length
+        ? `<div class="table-wrap"><table>
+            <thead><tr><th>Admin ID</th><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+            <tbody>${admins.map(a => `<tr>
+              <td><strong>${a.adminId}</strong></td><td>${a.name}</td><td>${a.email}</td>
+              <td><span class="badge badge-${a.role?.toLowerCase()}">${a.role}</span></td>
+              <td><button class="btn btn-danger btn-sm" onclick="deleteAdmin('${a.adminId}')">Delete</button></td>
+            </tr>`).join('')}</tbody></table></div>`
+        : `<div class="empty-state"><div class="icon">🔑</div><p>No admin accounts.</p></div>`;
+}
+async function deleteAdmin(id) {
+    if (!confirm('Delete this admin account?')) return;
+    await api('DELETE', `/api/admin/admins/${id}`);
+    loadAdmins();
+}
+function openAddAdmin() { document.getElementById('adminModal').classList.add('active'); }
+function closeAdminModal() { document.getElementById('adminModal').classList.remove('active'); }
+async function createAdmin() {
+    const { ok, data } = await api('POST', '/api/admin/admins', {
+        name: document.getElementById('adminName').value,
+        email: document.getElementById('adminEmail').value,
+        password: document.getElementById('adminPassword').value,
+        role: document.getElementById('adminRole').value
+    });
+    if (ok) { closeAdminModal(); loadAdmins(); showAlert('alertBox', 'Admin created!', 'success'); }
+    else showAlert('adminAlert', data.message || 'Failed.');
+}
+</script>
+</body>
+</html>

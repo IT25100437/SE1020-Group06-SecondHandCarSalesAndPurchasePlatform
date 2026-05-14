@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Dashboard - CarSpot.lk</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.seller-layout { display:grid; grid-template-columns:260px 1fr; gap:28px; align-items:start; }
+.seller-sidebar { background:white; border-radius:16px; border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow); position:sticky; top:84px; }
+.seller-sidebar-profile { background:linear-gradient(135deg,#065f46,#0d9488); padding:28px 22px; text-align:center; }
+.seller-sidebar-avatar { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.15); border:3px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 12px; }
+.seller-sidebar-name { color:white; font-weight:800; font-size:16px; margin-bottom:4px; }
+.seller-sidebar-nav { padding:10px 0; }
+.seller-nav-item { display:flex; align-items:center; gap:12px; padding:12px 20px; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; border:none; background:none; width:100%; text-align:left; border-left:3px solid transparent; transition:all 0.15s; }
+.seller-nav-item:hover { background:#f0fdf4; color:#065f46; }
+.seller-nav-item.active { background:#ecfdf5; color:#065f46; border-left-color:#0d9488; }
+.seller-nav-item .icon { font-size:18px; width:24px; text-align:center; }
+.panel-card { background:white; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:20px; }
+.panel-card-header { padding:20px 26px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.panel-card-header h3 { font-size:17px; font-weight:800; margin:0; }
+.panel-card-body { padding:26px; }
+.request-row { border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:12px; transition:box-shadow 0.15s; }
+.request-row:hover { box-shadow:var(--shadow); }
+@media(max-width:768px){ .seller-layout{grid-template-columns:1fr;} .seller-sidebar{position:static;} }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div style="background:linear-gradient(135deg,#065f46 0%,#0d9488 100%);padding:32px 0 28px;color:white">
+  <div class="container">
+    <h1 style="font-size:26px;font-weight:900;margin-bottom:4px" id="bannerTitle">Seller Dashboard</h1>
+    <p style="font-size:14px;opacity:0.8">Manage your listings, purchase requests, and profile</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:28px;padding-bottom:60px">
+  <div class="seller-layout">
+
+    <!-- Sidebar -->
+    <div class="seller-sidebar">
+      <div class="seller-sidebar-profile">
+        <div class="seller-sidebar-avatar" id="sidebarIcon">🏷</div>
+        <div class="seller-sidebar-name" id="sidebarName">Loading...</div>
+        <div id="sidebarRoleBadge" style="margin-top:6px"></div>
+        <div id="sidebarLocation" style="color:rgba(255,255,255,0.7);font-size:12px;margin-top:4px"></div>
+      </div>
+      <div class="seller-sidebar-nav">
+        <!-- My Profile FIRST -->
+        <button class="seller-nav-item active" id="tab-profile" onclick="showTab('profile')"><span class="icon">👤</span> My Profile</button>
+        <button class="seller-nav-item" id="tab-listings" onclick="showTab('listings')"><span class="icon">🚗</span> My Listings</button>
+        <button class="seller-nav-item" id="tab-requests" onclick="showTab('requests')"><span class="icon">📨</span> Purchase Requests</button>
+        <button class="seller-nav-item" id="tab-add" onclick="showTab('add')"><span class="icon">➕</span> Add New Listing</button>
+        <button class="seller-nav-item" id="tab-summary" onclick="showTab('summary')"><span class="icon">📊</span> Sales Summary</button>
+        <button class="seller-nav-item" id="tab-reviews" onclick="showTab('reviews')"><span class="icon">⭐</span> My Reviews</button>
+        <div style="height:1px;background:var(--border);margin:6px 0"></div>
+        <button class="seller-nav-item" style="color:var(--danger)" onclick="logout()"><span class="icon">🚪</span> Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div>
+      <div id="alertBox" style="margin-bottom:16px"></div>
+
+      <!-- ── MY PROFILE (default) ── -->
+      <div id="panel-profile">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>👤 My Seller Profile</h3>
+            <span id="profileTypeBadge"></span>
+          </div>
+          <div class="panel-card-body">
+            <form onsubmit="updateSellerProfile(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <div class="input-icon-wrap"><span class="icon">👤</span>
+                    <input class="form-input" id="sName" placeholder="Your name">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contact Number</label>
+                  <div class="input-icon-wrap"><span class="icon">📞</span>
+                    <input class="form-input" id="sContact" placeholder="+94 77 000 0000">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <div class="input-icon-wrap"><span class="icon">✉️</span>
+                  <input class="form-input" type="email" id="sEmail" placeholder="your@email.com">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Location / City</label>
+                <div class="input-icon-wrap"><span class="icon">📍</span>
+                  <input class="form-input" id="sLocation" placeholder="Colombo, Kandy...">
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button type="submit" class="btn btn-primary" id="saveProfileBtn">💾 Save Profile</button>
+                <button type="button" class="btn btn-ghost" onclick="showPasswordForm()">🔒 Change Password</button>
+                <button type="button" class="btn btn-danger" onclick="deleteSellerAccount()">🗑 Delete Account</button>
+              </div>
+            </form>
+            <!-- Password change section -->
+            <div id="passwordForm" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+              <h4 style="font-size:14px;font-weight:700;margin-bottom:14px">Change Password</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Current Password</label>
+                  <input class="form-input" type="password" id="oldPwd" placeholder="Current password">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">New Password</label>
+                  <input class="form-input" type="password" id="newPwd" placeholder="Min 6 characters">
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm" onclick="changePassword()">Update Password</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('passwordForm').style.display='none'">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews About Me -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>⭐ Reviews About Me</h3>
+            <div id="avgRatingDisplay"></div>
+          </div>
+          <div class="panel-card-body" id="sellerReviewsList">
+            <div class="loading-wrap"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+
+      </div>
+
+      <!-- ── MY LISTINGS ── -->
+      <div id="panel-listings" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>🚗 My Car Listings</h3>
+            <button class="btn btn-accent btn-sm" onclick="showTab('add')">+ Add New Car</button>
+          </div>
+          <div class="panel-card-body">
+            <div id="listingsList"><div class="loading-wrap"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PURCHASE REQUESTS ── -->
+      <div id="panel-requests" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>📨 Incoming Purchase Requests</h3>
+            <button class="btn btn-ghost btn-sm" onclick="loadRequests()">↺ Refresh</button>
+          </div>
+          <div class="panel-card-body">
+            <div id="requestsList"><div class="loading-wrap"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SALES SUMMARY ── -->
+      <div id="panel-summary" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>📊 My Sales Summary</h3>
+            <button class="btn btn-accent btn-sm" onclick="openManualSale()">+ Record Manual Sale</button>
+          </div>
+          <div class="panel-card-body">
+            <div class="stats-bar" id="summaryStats" style="margin-bottom:20px"></div>
+            <h4 style="font-size:14px;font-weight:700;margin-bottom:14px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Completed Transactions</h4>
+            <div id="summaryTransactions"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MY REVIEWS ── -->
+      <div id="panel-reviews" style="display:none">
+
+        <!-- Reviews About Me -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>⭐ Reviews About Me</h3>
+            <div id="tabAvgRating"></div>
+          </div>
+          <div class="panel-card-body" id="tabAboutMeList">
+            <div class="loading-wrap"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Reviews I Wrote -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>✍️ Reviews I've Written</h3>
+            <span style="font-size:12px;color:var(--muted)">Only you can edit or delete your own reviews</span>
+          </div>
+          <div class="panel-card-body" id="tabWrittenList">
+            <div class="loading-wrap"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADD / EDIT LISTING ── -->
+      <div id="panel-add" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3 id="formTitle">➕ Add New Listing</h3>
+          </div>
+          <div class="panel-card-body">
+            <div class="alert alert-info" style="margin-bottom:20px">Each listing is reviewed by admin before going public. It will show as <strong>PENDING</strong> until approved.</div>
+            <form onsubmit="saveListing(event)">
+              <input type="hidden" id="editId">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Brand</label>
+                  <input class="form-input" id="vBrand" placeholder="e.g. Toyota" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Model</label>
+                  <input class="form-input" id="vModel" placeholder="e.g. Corolla" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="number" id="vYear" min="1990" max="2025" placeholder="2020">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Price (Rs.)</label>
+                  <input class="form-input" type="number" id="vPrice" min="1" placeholder="3500000" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Mileage (km)</label>
+                  <input class="form-input" type="number" id="vMileage" min="0" placeholder="45000">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <select class="form-select" id="vType">
+                    <option value="used">Used</option>
+                    <option value="certified">Certified</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Image URL (optional)</label>
+                <input class="form-input" id="vImage" placeholder="https://example.com/car.jpg">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" id="vDesc" placeholder="Describe condition, features, service history..."></textarea>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button type="submit" class="btn btn-primary" id="saveListingBtn">💾 Save Listing</button>
+                <button type="button" class="btn btn-ghost" onclick="showTab('listings')">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Review Buyer Modal -->
+<div class="modal-overlay" id="reviewBuyerModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('reviewBuyerModal').classList.remove('active')">×</button>
+    <h3 class="modal-title">⭐ Review This Buyer</h3>
+    <p style="color:var(--muted);font-size:13px;margin-top:-14px;margin-bottom:20px">Rate your experience with this buyer.</p>
+    <div id="reviewBuyerAlert"></div>
+    <input type="hidden" id="reviewBuyerId">
+    <div class="form-group">
+      <label class="form-label">Rating</label>
+      <div id="buyerStarPicker" style="font-size:36px;cursor:pointer;letter-spacing:4px">
+        <span onclick="setBuyerRating(1)">☆</span><span onclick="setBuyerRating(2)">☆</span>
+        <span onclick="setBuyerRating(3)">☆</span><span onclick="setBuyerRating(4)">☆</span>
+        <span onclick="setBuyerRating(5)">☆</span>
+      </div>
+      <input type="hidden" id="buyerRating" value="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Comment</label>
+      <textarea class="form-textarea" id="buyerComment" placeholder="Was the buyer responsive and easy to deal with?"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitBuyerReview()">Submit Review</button>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+let sellerId = null;
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const ok = await requireAuth();
+    if (!ok) return;
+    if (!['SELLER','DEALER'].includes(currentRole?.toUpperCase())) {
+        window.location.href = 'index.html'; return;
+    }
+    renderNavbar();
+    // Load profile first (sets sellerId), then load reviews once sellerId is known
+    await loadSellerProfile();
+    await loadSellerReviews();
+    setupSidebarDisplay();
+});
+
+function setupSidebarDisplay() {
+    const name = document.getElementById('sName').value || currentUser?.name || 'Seller';
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('bannerTitle').textContent = `Welcome, ${name.split(' ')[0]}!`;
+    document.getElementById('sidebarIcon').textContent = currentRole?.toUpperCase() === 'DEALER' ? '🏢' : '🏷';
+    document.getElementById('sidebarRoleBadge').innerHTML = roleBadge(currentRole);
+    const loc = document.getElementById('sLocation').value;
+    if (loc) document.getElementById('sidebarLocation').textContent = '📍 ' + loc;
+    const type = (currentRole || 'seller').toUpperCase();
+    document.getElementById('profileTypeBadge').innerHTML = roleBadge(type);
+}
+
+function showTab(tab) {
+    ['profile','listings','requests','add','reviews','summary'].forEach(t => {
+        document.getElementById('panel-'+t).style.display = t === tab ? 'block' : 'none';
+        document.getElementById('tab-'+t)?.classList.toggle('active', t === tab);
+    });
+    if (tab === 'listings') loadListings();
+    if (tab === 'requests') loadRequests();
+    if (tab === 'reviews')  loadReviewsTab();
+    if (tab === 'summary')  loadSalesSummary();
+    if (tab === 'add') {
+        // Only reset if this is a fresh "add" - not when editListing() already filled the form
+        const isEdit = document.getElementById('editId').value !== '';
+        if (!isEdit) {
+            document.getElementById('formTitle').textContent = '➕ Add New Listing';
+            document.querySelector('#panel-add form')?.reset();
+        }
+    }
+}
+
+// ── MY PROFILE ──────────────────────────────────────
+async function loadSellerProfile() {
+    const { ok, data } = await api('GET', '/api/sellers/me');
+    if (!ok || !data.seller) return;
+    const s = data.seller;
+    sellerId = s.id;
+    document.getElementById('sName').value     = s.name     || '';
+    document.getElementById('sContact').value  = s.contact  || '';
+    document.getElementById('sEmail').value    = s.email    || '';
+    document.getElementById('sLocation').value = s.location || '';
+    document.getElementById('profileTypeBadge').innerHTML = roleBadge(s.type?.toUpperCase() || currentRole);
+}
+
+async function updateSellerProfile(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveProfileBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+
+    const newEmail   = document.getElementById('sEmail').value.trim();
+    const newName    = document.getElementById('sName').value.trim();
+    const newContact = document.getElementById('sContact').value.trim();
+    const newLoc     = document.getElementById('sLocation').value.trim();
+
+    const { ok, data } = await api('PUT', '/api/sellers/me', {
+        name: newName, contact: newContact, location: newLoc, image: '', email: newEmail
+    });
+    btn.disabled = false; btn.textContent = '💾 Save Profile';
+    showAlert('alertBox', ok ? 'Profile updated successfully!' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) { setupSidebarDisplay(); renderNavbar(); }
+}
+
+function showPasswordForm() {
+    const el = document.getElementById('passwordForm');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function changePassword() {
+    const oldPwd = document.getElementById('oldPwd').value;
+    const newPwd = document.getElementById('newPwd').value;
+    if (!oldPwd || !newPwd) { showAlert('alertBox','Please fill both password fields.','warning'); return; }
+    if (newPwd.length < 6) { showAlert('alertBox','New password must be at least 6 characters.','warning'); return; }
+    const { ok, data } = await api('PUT', '/api/sellers/me/password', { oldPassword: oldPwd, newPassword: newPwd });
+    showAlert('alertBox', ok ? 'Password updated!' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) {
+        document.getElementById('passwordForm').style.display = 'none';
+        document.getElementById('oldPwd').value = '';
+        document.getElementById('newPwd').value = '';
+    }
+}
+
+async function deleteSellerAccount() {
+    if (!confirm('Delete your account? All your listings will be removed. This cannot be undone.')) return;
+    const { ok } = await api('DELETE', '/api/sellers/me');
+    if (ok) window.location.href = 'index.html';
+}
+
+// ── MY LISTINGS ──────────────────────────────────────
+async function loadListings() {
+    const { ok, data } = await api('GET', '/api/vehicles/mine');
+    const vehicles = data.vehicles || [];
+    const el = document.getElementById('listingsList');
+    if (!vehicles.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">🚗</div><p>No listings yet.</p><button class="btn btn-accent" style="margin-top:14px" onclick="showTab('add')">+ Add Your First Car</button></div>`;
+        return;
+    }
+    el.innerHTML = vehicles.map(v => `
+        <div style="border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:16px">
+          ${v.imageUrl ? `<img src="${v.imageUrl}" style="width:80px;height:55px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">` : `<div style="width:80px;height:55px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🚗</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:16px;margin-bottom:4px">${v.title}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)">
+              <strong style="color:var(--primary-light)">${formatPrice(v.price)}</strong>
+              <span>📅 ${v.year}</span>
+              <span>🛣 ${(v.mileage||0).toLocaleString()} km</span>
+              ${statusBadge(v.status)}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-outline btn-sm" onclick="editListing(${v.id})">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteListing(${v.id})">Delete</button>
+          </div>
+        </div>`).join('');
+    window._listings = vehicles;
+}
+
+function editListing(id) {
+    const v = window._listings?.find(x => x.id === id);
+    if (!v) return;
+    // Set editId FIRST so showTab('add') knows not to reset the form
+    document.getElementById('editId').value   = v.id;
+    // Now switch to the add panel (won't reset because editId is set)
+    showTab('add');
+    // Fill all fields after panel is visible
+    document.getElementById('vBrand').value   = v.brand || '';
+    document.getElementById('vModel').value   = v.model || '';
+    document.getElementById('vYear').value    = v.year  || '';
+    document.getElementById('vPrice').value   = v.price || '';
+    document.getElementById('vMileage').value = v.mileage || 0;
+    document.getElementById('vType').value    = v.type || 'used';
+    document.getElementById('vImage').value   = v.imageUrl || '';
+    document.getElementById('vDesc').value    = v.description || '';
+    document.getElementById('formTitle').textContent = '✏️ Edit Listing — ' + v.title;
+}
+
+async function saveListing(e) {
+    e.preventDefault();
+    const editId = document.getElementById('editId').value;
+    const body = {
+        brand:       document.getElementById('vBrand').value,
+        model:       document.getElementById('vModel').value,
+        year:        parseInt(document.getElementById('vYear').value) || 2020,
+        price:       parseFloat(document.getElementById('vPrice').value),
+        mileage:     parseInt(document.getElementById('vMileage').value) || 0,
+        type:        document.getElementById('vType').value,
+        imageUrl:    document.getElementById('vImage').value,
+        description: document.getElementById('vDesc').value
+    };
+    const btn = document.getElementById('saveListingBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    const { ok, data } = editId
+        ? await api('PUT',  `/api/vehicles/${editId}`, body)
+        : await api('POST', '/api/vehicles', body);
+    btn.disabled = false; btn.textContent = '💾 Save Listing';
+    showAlert('alertBox', ok
+        ? (editId ? 'Listing updated! Pending admin re-approval.' : 'Listing submitted for admin approval!')
+        : data.message || 'Failed to save.', ok ? 'success' : 'error');
+    if (ok) showTab('listings');
+}
+
+async function deleteListing(id) {
+    if (!confirm('Permanently delete this listing?')) return;
+    const { ok, data } = await api('DELETE', `/api/vehicles/${id}`);
+    showAlert('alertBox', ok ? 'Listing deleted.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadListings();
+}
+
+// ── PURCHASE REQUESTS ──────────────────────────────────
+async function loadRequests() {
+    const { data } = await api('GET', '/api/selling/requests');
+    const bookings = data.bookings || [];
+    const el = document.getElementById('requestsList');
+    if (!bookings.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📨</div><p>No purchase requests yet.<br><small>Requests appear here when buyers make offers on your cars.</small></p></div>`;
+        return;
+    }
+    const sc = {
+        PENDING:   { bg:'#fef9c3', color:'#854d0e', icon:'⏳' },
+        CONFIRMED: { bg:'#dbeafe', color:'#1e40af', icon:'✅' },
+        SOLD:      { bg:'#d1fae5', color:'#065f46', icon:'🤝' },
+        REJECTED:  { bg:'#fee2e2', color:'#991b1b', icon:'❌' },
+    };
+    el.innerHTML = bookings.map(b => {
+        const s = sc[b.status] || { bg:'#f1f5f9', color:'#475569', icon:'•' };
+        return `
+        <div class="request-row">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+            <div>
+              <span style="font-weight:700;font-size:15px">${b.vehicleTitle || ('Vehicle #' + b.vehicleId)}</span>
+              <span style="background:${s.bg};color:${s.color};padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px">${s.icon} ${b.status}</span>
+              ${b.paid ? '<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:4px">💳 PAID</span>' : ''}
+            </div>
+            <div style="font-size:20px;font-weight:900;color:var(--primary-light)">${formatPrice(b.offerAmount)}</div>
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px">
+            Buyer #${b.customerId} · ${formatDate(b.createdAt)}
+            ${b.offerMessage ? `<br><em>"${b.offerMessage}"</em>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              ${b.status === 'PENDING' ? `
+                <button class="btn btn-success btn-sm" onclick="confirmBooking(${b.id})">✓ Confirm</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectBooking(${b.id})">✗ Reject</button>
+                <button class="btn btn-outline btn-sm" onclick="openCounterOffer(${b.id}, ${b.offerAmount})">💬 Counter</button>` : ''}
+              ${b.status === 'SOLD' ? `<button class="btn btn-outline btn-sm" onclick="openReviewBuyer(${b.customerId})">⭐ Review Buyer</button>` : ''}
+              <button class="btn btn-ghost btn-sm" onclick="deleteRequest(${b.id})" title="Remove this request" style="color:var(--danger);border-color:var(--danger)">🗑</button>
+            </div>
+            ${b.status === 'COUNTERED' ? `
+              <span style="background:#ede9fe;color:#4c1d95;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">💬 COUNTER SENT: ${formatPrice(b.counterAmount)}</span>
+              <button class="btn btn-success btn-sm" onclick="confirmBooking(${b.id})">✓ Accept Anyway</button>` : ''}
+            ${b.status === 'CONFIRMED' ? `
+              <button class="btn btn-primary btn-sm" ${b.paid ? '' : 'disabled title="Wait for buyer payment first"'} onclick="markSold(${b.id})">${b.paid ? '🤝 Mark as Sold' : '🔒 Awaiting Payment'}</button>` : ''}
+
+          </div>
+        </div>`;
+    }).join('');
+}
+
+async function confirmBooking(id) {
+    const { ok, data } = await api('POST', `/api/selling/requests/${id}/confirm`);
+    showAlert('alertBox', ok ? 'Booking confirmed! Buyer can now make payment.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadRequests();
+}
+
+async function rejectBooking(id) {
+    if (!confirm('Reject this purchase request?')) return;
+    const { ok, data } = await api('POST', `/api/selling/requests/${id}/reject`);
+    showAlert('alertBox', ok ? 'Request rejected.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadRequests();
+}
+
+async function markSold(id) {
+    if (!confirm('Mark as sold? This completes the transaction and marks the vehicle as SOLD.')) return;
+    const { ok, data } = await api('POST', `/api/selling/requests/${id}/sold`);
+    showAlert('alertBox', ok ? 'Marked as sold! Transaction recorded.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadRequests();
+}
+
+// ── REVIEWS ABOUT ME ───────────────────────────────────
+// FIX: sellerId is set by loadSellerProfile() before this is called
+async function loadSellerReviews() {
+    const el = document.getElementById('sellerReviewsList');
+    if (!sellerId) {
+        el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:32px">⭐</div><p style="font-size:13px">No reviews yet.</p></div>`;
+        return;
+    }
+    const { data } = await api('GET', `/api/reviews/seller/${sellerId}`);
+    const reviews  = data.reviews || [];
+    const avg      = data.averageRating || 0;
+
+    document.getElementById('avgRatingDisplay').innerHTML = avg > 0
+        ? `<span style="color:var(--accent);font-size:18px">${'★'.repeat(Math.round(avg))}</span> <span style="font-size:13px;color:var(--muted)">${avg} avg (${reviews.length})</span>`
+        : '';
+
+    if (!reviews.length) {
+        el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:32px">⭐</div><p style="font-size:13px">No reviews yet. Complete sales to receive buyer reviews.</p></div>`;
+        return;
+    }
+    el.innerHTML = reviews.map(r => `
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--bg)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--accent);font-size:16px">${renderStars(r.rating)}</span>
+            <span style="font-size:11px;color:var(--muted)">${formatDate(r.createdAt)}</span>
+          </div>
+          <p style="font-size:13.5px;line-height:1.65">${r.comment || ''}</p>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">From Buyer #${r.reviewerId}</div>
+        </div>`).join('');
+}
+
+// ── REVIEW BUYER ───────────────────────────────────────
+function openReviewBuyer(buyerId) {
+    document.getElementById('reviewBuyerId').value = buyerId;
+    document.getElementById('buyerRating').value   = 0;
+    document.getElementById('buyerComment').value  = '';
+    document.getElementById('reviewBuyerAlert').innerHTML = '';
+    setBuyerRating(0);
+    document.getElementById('reviewBuyerModal').classList.add('active');
+}
+
+function setBuyerRating(val) {
+    document.getElementById('buyerRating').value = val;
+    document.querySelectorAll('#buyerStarPicker span').forEach((s,i) => {
+        s.textContent = i < val ? '★' : '☆';
+        s.style.color = i < val ? 'var(--accent)' : 'var(--border)';
+    });
+}
+
+async function submitBuyerReview() {
+    const modal    = document.getElementById('reviewBuyerModal');
+    const isEdit   = modal.dataset.editMode === 'true';
+    const rating   = parseInt(document.getElementById('buyerRating').value);
+    const comment  = document.getElementById('buyerComment').value.trim();
+    if (!rating)  { showAlert('reviewBuyerAlert', 'Please select a star rating.', 'warning'); return; }
+    if (!comment) { showAlert('reviewBuyerAlert', 'Please write a comment.', 'warning'); return; }
+    let ok, data;
+    if (isEdit) {
+        const reviewId = parseInt(modal.dataset.reviewId);
+        ({ ok, data } = await api('PUT', `/api/reviews/${reviewId}`, { rating, comment }));
+    } else {
+        const buyerId = parseInt(document.getElementById('reviewBuyerId').value);
+        ({ ok, data } = await api('POST', '/api/reviews', { targetId: buyerId, targetType: 'buyer', rating, comment }));
+    }
+    if (ok) {
+        modal.classList.remove('active');
+        modal.dataset.editMode = 'false';
+        showAlert('alertBox', isEdit ? 'Review updated!' : 'Review submitted!', 'success');
+        loadWrittenReviews();
+    } else {
+        showAlert('reviewBuyerAlert', data.message || 'Failed.');
+    }
+}
+
+// Reset edit mode when opening for a new review
+function openReviewBuyer(buyerId) {
+    const modal = document.getElementById('reviewBuyerModal');
+    modal.dataset.editMode = 'false';
+    document.getElementById('reviewBuyerId').value = buyerId;
+    document.getElementById('buyerRating').value   = 0;
+    document.getElementById('buyerComment').value  = '';
+    document.getElementById('reviewBuyerAlert').innerHTML = '';
+    setBuyerRating(0);
+    modal.classList.add('active');
+}
+
+// ── REVIEWS I WROTE ────────────────────────────────────
+async function loadWrittenReviews() {
+    const el = document.getElementById('sellerWrittenReviews');
+    const { data } = await api('GET', '/api/reviews/mine/customer');
+    const reviews = data.reviews || [];
+    if (!reviews.length) {
+        el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:28px">✍️</div><p style="font-size:13px">No reviews written yet.<br><small>You can review buyers after completing a sale.</small></p></div>`;
+        return;
+    }
+    el.innerHTML = reviews.map(r => `
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <span style="color:var(--accent);font-size:16px">${renderStars(r.rating)}</span>
+              <span class="badge badge-buyer" style="margin-left:8px">Buyer #${r.targetId}</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openEditWrittenReview(${r.id}, ${r.rating}, '${(r.comment||'').replace(/'/g,"\\'")}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteWrittenReview(${r.id})">Delete</button>
+            </div>
+          </div>
+          <p style="font-size:13.5px;line-height:1.65">${r.comment||''}</p>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">${formatDate(r.createdAt)}</div>
+        </div>`).join('');
+}
+
+async function deleteWrittenReview(id) {
+    if (!confirm('Delete this review?')) return;
+    const { ok, data } = await api('DELETE', `/api/reviews/${id}`);
+    showAlert('alertBox', ok ? 'Review deleted.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadWrittenReviews();
+}
+
+function openEditWrittenReview(reviewId, currentRating, currentComment) {
+    document.getElementById('reviewBuyerId').value = reviewId; // reuse modal, store reviewId
+    document.getElementById('reviewBuyerModal').dataset.editMode = 'true';
+    document.getElementById('reviewBuyerModal').dataset.reviewId = reviewId;
+    document.getElementById('buyerRating').value = 0;
+    document.getElementById('buyerComment').value = currentComment || '';
+    document.getElementById('reviewBuyerAlert').innerHTML = '';
+    setBuyerRating(currentRating || 0);
+    document.getElementById('reviewBuyerModal').classList.add('active');
+}
+
+
+// ── MY REVIEWS TAB ──────────────────────────────────────
+async function loadReviewsTab() {
+    // About Me
+    const aboutEl = document.getElementById('tabAboutMeList');
+    const avgEl   = document.getElementById('tabAvgRating');
+    if (sellerId) {
+        const { data } = await api('GET', `/api/reviews/seller/${sellerId}`);
+        const reviews = data.reviews || [];
+        const avg     = data.averageRating || 0;
+        avgEl.innerHTML = avg > 0
+            ? `<span style="color:var(--accent)">${'★'.repeat(Math.round(avg))}</span> <span style="font-size:13px;color:var(--muted)">${avg} avg (${reviews.length})</span>`
+            : '';
+        if (!reviews.length) {
+            aboutEl.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:28px">⭐</div><p style="font-size:13px">No reviews about you yet.</p></div>`;
+        } else {
+            aboutEl.innerHTML = reviews.map(r => `
+                <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--bg)">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <span style="color:var(--accent);font-size:16px">${renderStars(r.rating)}</span>
+                    <span style="font-size:11px;color:var(--muted)">${formatDate(r.createdAt)}</span>
+                  </div>
+                  <p style="font-size:13.5px;line-height:1.65">${r.comment||''}</p>
+                  <div style="font-size:11px;color:var(--muted);margin-top:6px">From Buyer #${r.reviewerId}</div>
+                </div>`).join('');
+        }
+    } else {
+        aboutEl.innerHTML = `<div class="empty-state" style="padding:24px"><p style="font-size:13px">Unable to load reviews.</p></div>`;
+    }
+
+    // Reviews I Wrote
+    const writtenEl = document.getElementById('tabWrittenList');
+    const { data: wd } = await api('GET', '/api/reviews/mine/customer');
+    const written = wd.reviews || [];
+    if (!written.length) {
+        writtenEl.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:28px">✍️</div><p style="font-size:13px">No reviews written yet.<br><small>Review buyers after completing sales.</small></p></div>`;
+    } else {
+        writtenEl.innerHTML = written.map(r => `
+            <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div>
+                  <span style="color:var(--accent);font-size:16px">${renderStars(r.rating)}</span>
+                  <span class="badge badge-buyer" style="margin-left:8px">Buyer #${r.targetId}</span>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-ghost btn-sm" onclick="openEditWrittenReview(${r.id}, ${r.rating}, \`${(r.comment||'').replace(/`/g,'\`')}\`)">✏️ Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteWrittenReview(${r.id})">Delete</button>
+                </div>
+              </div>
+              <p style="font-size:13.5px;line-height:1.65">${r.comment||''}</p>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px">${formatDate(r.createdAt)}</div>
+            </div>`).join('');
+    }
+}
+
+// ── COUNTER-OFFER ────────────────────────────────────────
+function openCounterOffer(bookingId, originalAmount) {
+    document.getElementById('counterBookingId').value = bookingId;
+    document.getElementById('counterOriginal').value = formatPrice(originalAmount);
+    document.getElementById('counterAmount').value = Math.round(originalAmount);
+    document.getElementById('counterNote').value = '';
+    document.getElementById('counterAlert').innerHTML = '';
+    document.getElementById('counterModal').classList.add('active');
+}
+
+async function submitCounterOffer() {
+    const bookingId    = parseInt(document.getElementById('counterBookingId').value);
+    const counterAmount = parseFloat(document.getElementById('counterAmount').value);
+    const sellerNote   = document.getElementById('counterNote').value.trim();
+    if (!counterAmount || counterAmount <= 0) {
+        showAlert('counterAlert', 'Please enter a valid counter-offer price.', 'warning'); return;
+    }
+    const { ok, data } = await api('POST', `/api/selling/requests/${bookingId}/counter`,
+        { counterAmount, sellerNote });
+    if (ok) {
+        document.getElementById('counterModal').classList.remove('active');
+        showAlert('alertBox', 'Counter-offer sent! Buyer will see it on their account.', 'success');
+        loadRequests();
+    } else {
+        showAlert('counterAlert', data.message || 'Failed to send counter-offer.');
+    }
+}
+
+
+// ── SALES SUMMARY ────────────────────────────────────────
+async function loadSalesSummary() {
+    document.getElementById('summaryStats').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    document.getElementById('summaryTransactions').innerHTML = '';
+
+    const [summaryRes, txRes, listingsRes] = await Promise.all([
+        api('GET', '/api/selling/summary'),
+        api('GET', '/api/selling/transactions'),
+        api('GET', '/api/vehicles/mine')
+    ]);
+
+    // Stats bar
+    if (summaryRes.ok) {
+        const d = summaryRes.data;
+        document.getElementById('summaryStats').innerHTML = `
+            <div class="stat-card"><div class="stat-num">${d.totalSold || 0}</div><div class="stat-label">Cars Sold</div></div>
+            <div class="stat-card"><div class="stat-num" style="font-size:20px">${formatPrice(d.totalRevenue || 0)}</div><div class="stat-label">Total Revenue</div></div>
+            <div class="stat-card"><div class="stat-num" style="font-size:20px">${formatPrice(d.averagePrice || 0)}</div><div class="stat-label">Avg Sale Price</div></div>
+            <div class="stat-card"><div class="stat-num" style="color:var(--warning)">${d.pendingRequests || 0}</div><div class="stat-label">Pending</div></div>
+        `;
+    }
+
+    // Build vehicle map for name lookup
+    const vehicleMap = {};
+    (listingsRes.data?.vehicles || []).forEach(v => { vehicleMap[v.id] = v; });
+
+    // Sold vehicles section
+    const soldListings = (listingsRes.data?.vehicles || []).filter(v => v.status === 'SOLD');
+    const soldHtml = soldListings.length
+        ? soldListings.map(v => `
+            <div style="display:flex;align-items:center;gap:14px;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+              ${v.imageUrl
+                ? `<img src="${v.imageUrl}" style="width:70px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`
+                : `<div style="width:70px;height:48px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🚗</div>`}
+              <div style="flex:1">
+                <div style="font-weight:700">${v.title}</div>
+                <div style="font-size:13px;color:var(--muted)">📅 ${v.year} · 🛣 ${(v.mileage||0).toLocaleString()} km</div>
+              </div>
+              <div style="text-align:right;display:flex;align-items:center;gap:10px">
+                <div>
+                  <div style="font-size:17px;font-weight:800;color:var(--primary-light)">${formatPrice(v.price)}</div>
+                  ${statusBadge(v.status)}
+                </div>
+              </div>
+            </div>`).join('')
+        : '<p style="color:var(--muted);font-size:13px;padding:8px 0">No sold vehicles yet.</p>';
+
+    // Transaction records with edit status + delete
+    const txs = txRes.data?.transactions || [];
+    const txHtml = txs.length
+        ? `<div class="table-wrap"><table>
+            <thead><tr><th>TX</th><th>Car</th><th>Sale Price</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>${txs.map(t => {
+                const vName = vehicleMap[t.vehicleId]?.title || ('Vehicle #' + t.vehicleId);
+                return `<tr>
+                  <td style="font-size:12px;color:var(--muted)">#${t.id}</td>
+                  <td><strong>${vName}</strong></td>
+                  <td><strong style="color:var(--primary-light)">${formatPrice(t.amount)}</strong></td>
+                  <td>
+                    <select class="form-select" style="font-size:12px;padding:4px 8px;width:130px"
+                            onchange="updateTxStatus(${t.id}, this.value)">
+                      <option value="COMPLETED" ${t.status==='COMPLETED'?'selected':''}>✅ Completed</option>
+                      <option value="PENDING"   ${t.status==='PENDING'  ?'selected':''}>⏳ Pending</option>
+                      <option value="CANCELLED" ${t.status==='CANCELLED'?'selected':''}>❌ Cancelled</option>
+                    </select>
+                  </td>
+                  <td style="font-size:12px;color:var(--muted)">${formatDate(t.createdAt)}</td>
+                  <td>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTx(${t.id})" title="Delete transaction">🗑</button>
+                  </td>
+                </tr>`;
+            }).join('')}</tbody>
+           </table></div>`
+        : '<p style="color:var(--muted);font-size:13px;padding:8px 0">No transaction records yet.</p>';
+
+    document.getElementById('summaryTransactions').innerHTML = `
+        <h4 style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Sold Vehicles</h4>
+        ${soldHtml}
+        <hr class="divider">
+        <h4 style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Transaction Records</h4>
+        ${txHtml}
+    `;
+}
+
+async function updateTxStatus(txId, newStatus) {
+    const { ok, data } = await api('PUT', `/api/selling/transactions/${txId}/status`, { status: newStatus });
+    if (ok) {
+        showAlert('alertBox', 'Transaction status updated.', 'success');
+    } else {
+        showAlert('alertBox', data.message || 'Failed to update status.', 'error');
+        loadSalesSummary(); // revert UI
+    }
+}
+
+async function deleteTx(txId) {
+    if (!confirm('Delete this transaction record?')) return;
+    const { ok, data } = await api('DELETE', `/api/selling/transactions/${txId}`);
+    if (ok) {
+        showAlert('alertBox', 'Transaction deleted.', 'success');
+        loadSalesSummary();
+    } else {
+        showAlert('alertBox', data.message || 'Failed.', 'error');
+    }
+}
+
+
+async function deleteRequest(bookingId) {
+    if (!confirm('Remove this request from your list?')) return;
+    // Call admin booking delete or mark as dismissed
+    const { ok, data } = await api('DELETE', `/api/selling/requests/${bookingId}`);
+    showAlert('alertBox', ok ? 'Request removed.' : (data.message || 'Could not remove.'), ok ? 'success' : 'error');
+    loadRequests();
+}
+
+
+// ── MANUAL SALE ──────────────────────────────────────────
+function openManualSale() {
+    // Populate vehicle dropdown with seller's listings
+    api('GET', '/api/vehicles/mine').then(({ data }) => {
+        const sel = document.getElementById('manualVehicleId');
+        sel.innerHTML = '<option value="">-- Select your vehicle --</option>';
+        (data.vehicles || []).forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.title + ' — ' + formatPrice(v.price)
+                + (v.status === 'SOLD' ? ' [SOLD]' : '');
+            sel.appendChild(opt);
+        });
+    });
+    document.getElementById('manualAmount').value    = '';
+    document.getElementById('manualBuyerId').value   = '0';
+    document.getElementById('manualNotes').value     = '';
+    document.getElementById('manualSaleAlert').innerHTML = '';
+    document.getElementById('manualSaleModal').classList.add('active');
+}
+
+function closeManualSale() {
+    document.getElementById('manualSaleModal').classList.remove('active');
+}
+
+async function submitManualSale() {
+    const vehicleId   = parseInt(document.getElementById('manualVehicleId').value);
+    const amount      = parseFloat(document.getElementById('manualAmount').value);
+    const payMethod   = document.getElementById('manualPayMethod').value;
+    const buyerId     = parseInt(document.getElementById('manualBuyerId').value) || 0;
+    const notes       = document.getElementById('manualNotes').value.trim();
+
+    if (!vehicleId) {
+        showAlert('manualSaleAlert', 'Please select a vehicle.', 'warning'); return;
+    }
+    if (!amount || amount <= 0) {
+        showAlert('manualSaleAlert', 'Please enter a valid sale amount.', 'warning'); return;
+    }
+
+    const { ok, data } = await api('POST', '/api/selling/transactions/manual', {
+        vehicleId, amount, buyerId, paymentMethod: payMethod, notes
+    });
+
+    if (ok) {
+        closeManualSale();
+        showAlert('alertBox', 'Sale recorded successfully! Transaction saved.', 'success');
+        loadSalesSummary();
+        showTab('summary');
+    } else {
+        showAlert('manualSaleAlert', data.message || 'Failed to record sale.');
+    }
+}
+
+</script>
+
+<!-- Counter-Offer Modal -->
+<div class="modal-overlay" id="counterModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('counterModal').classList.remove('active')">×</button>
+    <h3 class="modal-title">💬 Send Counter-Offer</h3>
+    <p style="color:var(--muted);font-size:13px;margin-top:-14px;margin-bottom:20px">Propose a different price to the buyer.</p>
+    <div id="counterAlert"></div>
+    <input type="hidden" id="counterBookingId">
+    <div class="form-group">
+      <label class="form-label">Buyer's Original Offer</label>
+      <input class="form-input" id="counterOriginal" readonly style="background:var(--bg);color:var(--muted)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Counter-Offer Price (Rs.)</label>
+      <div class="input-icon-wrap"><span class="icon">💵</span>
+        <input class="form-input" type="number" id="counterAmount" min="1" step="1000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note to Buyer (optional)</label>
+      <textarea class="form-textarea" id="counterNote" placeholder="Explain your price, mention condition, arrange viewing..."></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitCounterOffer()">Send Counter-Offer</button>
+  </div>
+</div>
+
+
+
+
+<!-- Manual Sale Modal -->
+<div class="modal-overlay" id="manualSaleModal">
+  <div class="modal" style="max-width:520px">
+    <button class="modal-close" onclick="closeManualSale()">×</button>
+    <h3 class="modal-title">📝 Record a Manual Sale</h3>
+    <p style="color:var(--muted);font-size:13px;margin-top:-14px;margin-bottom:20px">
+      Record a sale that was completed outside the platform (e.g. cash deal, in-person agreement).
+    </p>
+    <div id="manualSaleAlert"></div>
+
+    <div class="form-group">
+      <label class="form-label">Vehicle</label>
+      <select class="form-select" id="manualVehicleId">
+        <option value="">-- Select your vehicle --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Sale Amount (Rs.)</label>
+        <div class="input-icon-wrap"><span class="icon">💵</span>
+          <input class="form-input" type="number" id="manualAmount" min="1" step="1000" placeholder="e.g. 3500000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select" id="manualPayMethod">
+          <option value="cash">💵 Cash</option>
+          <option value="bank_transfer">🏦 Bank Transfer</option>
+          <option value="card">💳 Card</option>
+          <option value="cheque">📄 Cheque</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Buyer ID <span style="color:var(--muted);font-weight:400">(optional — enter buyer's system ID if known)</span></label>
+      <div class="input-icon-wrap"><span class="icon">👤</span>
+        <input class="form-input" type="number" id="manualBuyerId" placeholder="Leave 0 for external/walk-in buyer" min="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="manualNotes" placeholder="Sale details, buyer name, any relevant info..." style="min-height:72px"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" style="font-size:15px;padding:13px" onclick="submitManualSale()">
+      📝 Record Transaction
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

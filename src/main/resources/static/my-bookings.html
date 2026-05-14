@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Purchase Requests - CarSpot.lk</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div style="background:linear-gradient(135deg,var(--primary) 0%,var(--primary-mid) 60%,#1d4ed8 100%);color:white;padding:36px 0 28px">
+  <div class="container">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:8px">📋 Purchase History</div>
+    <h1 style="font-size:28px;font-weight:900;margin-bottom:6px">My Purchase Requests</h1>
+    <p style="font-size:14px;opacity:0.82">Track all your offers and buying activity</p>
+  </div>
+</div>
+
+<div class="container page-section">
+  <div id="alertBox"></div>
+
+  <!-- Status filter tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap">
+    <button class="btn btn-primary btn-sm" id="tab-all" onclick="filterStatus('')">All</button>
+    <button class="btn btn-ghost btn-sm" id="tab-PENDING" onclick="filterStatus('PENDING')">⏳ Pending</button>
+    <button class="btn btn-ghost btn-sm" id="tab-CONFIRMED" onclick="filterStatus('CONFIRMED')">✅ Confirmed</button>
+    <button class="btn btn-ghost btn-sm" id="tab-SOLD" onclick="filterStatus('SOLD')">🤝 Sold</button>
+    <button class="btn btn-ghost btn-sm" id="tab-REJECTED" onclick="filterStatus('REJECTED')">❌ Rejected</button>
+  </div>
+
+  <div class="loading-wrap" id="loadingWrap"><div class="spinner"></div></div>
+  <div id="bookingsList" style="display:none;flex-direction:column;gap:14px"></div>
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="icon">📋</div>
+    <p>No purchase requests found.<br><small>Browse cars and make an offer to get started.</small></p>
+    <a href="browse.html" class="btn btn-primary" style="margin-top:16px">🔍 Browse Cars</a>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+let allBookings = [];
+let activeStatus = '';
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const ok = await requireAuth();
+    if (!ok) return;
+    renderNavbar();
+    loadBookings();
+});
+
+async function loadBookings() {
+    document.getElementById('loadingWrap').style.display = 'flex';
+    document.getElementById('bookingsList').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+
+    const { ok, data } = await api('GET', '/api/bookings/mine/customer');
+    document.getElementById('loadingWrap').style.display = 'none';
+    if (!ok) { showAlert('alertBox', 'Failed to load requests.'); return; }
+    allBookings = data.bookings || [];
+    renderBookings();
+}
+
+function filterStatus(status) {
+    activeStatus = status;
+    document.querySelectorAll('[id^="tab-"]').forEach(b => {
+        b.className = b.id === ('tab-' + (status || 'all'))
+            ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+    });
+    renderBookings();
+}
+
+function renderBookings() {
+    const filtered = activeStatus
+        ? allBookings.filter(b => b.status === activeStatus)
+        : allBookings;
+
+    const el = document.getElementById('bookingsList');
+    if (!filtered.length) { document.getElementById('emptyState').style.display = 'block'; el.style.display = 'none'; return; }
+
+    el.style.display = 'flex';
+    el.innerHTML = filtered.map(b => {
+        const statusColors = {
+            PENDING: { bg:'#fef9c3', color:'#854d0e', icon:'⏳' },
+            CONFIRMED: { bg:'#dbeafe', color:'#1e40af', icon:'✅' },
+            SOLD: { bg:'#d1fae5', color:'#065f46', icon:'🤝' },
+            REJECTED: { bg:'#fee2e2', color:'#991b1b', icon:'❌' },
+            CANCELLED: { bg:'#f1f5f9', color:'#475569', icon:'🚫' },
+        };
+        const sc = statusColors[b.status] || { bg:'#f1f5f9', color:'#475569', icon:'•' };
+        return `
+        <div class="card card-hover" style="padding:20px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+            <div>
+              <div style="font-size:16px;font-weight:800;margin-bottom:6px">
+                Vehicle Booking #${b.id}
+                <span style="background:${sc.bg};color:${sc.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px">${sc.icon} ${b.status}</span>
+              </div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)">
+                <span>🚗 Vehicle #${b.vehicleId}</span>
+                <span>💰 Offer: <strong style="color:var(--primary-light)">${formatPrice(b.offerAmount)}</strong></span>
+                <span>📅 ${formatDate(b.createdAt)}</span>
+              </div>
+              ${b.offerMessage ? `<div style="margin-top:8px;font-size:13px;color:var(--muted);font-style:italic">"${b.offerMessage}"</div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+              ${b.status === 'PENDING' ? `
+                <button class="btn btn-outline btn-sm" onclick="editOffer(${b.id}, ${b.offerAmount})">✏️ Edit Offer</button>
+                <button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>
+              ` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+}
+
+async function cancelBooking(id) {
+    if (!confirm('Cancel this purchase request?')) return;
+    const { ok, data } = await api('DELETE', `/api/bookings/${id}`);
+    if (ok) { showAlert('alertBox', 'Request cancelled.', 'success'); loadBookings(); }
+    else showAlert('alertBox', data.message || 'Failed to cancel.');
+}
+
+function editOffer(id, currentAmount) {
+    const newAmount = prompt('Enter new offer amount (Rs.):', currentAmount);
+    if (!newAmount || isNaN(newAmount)) return;
+    const msg = prompt('Update your message (optional):') || '';
+    updateOffer(id, parseFloat(newAmount), msg);
+}
+
+async function updateOffer(id, offerAmount, offerMessage) {
+    const { ok, data } = await api('PUT', `/api/bookings/${id}`, { offerAmount, offerMessage });
+    if (ok) { showAlert('alertBox', 'Offer updated.', 'success'); loadBookings(); }
+    else showAlert('alertBox', data.message || 'Failed to update.');
+}
+</script>
+</body>
+</html>

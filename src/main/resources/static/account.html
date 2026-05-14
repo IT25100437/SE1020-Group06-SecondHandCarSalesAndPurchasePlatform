@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account - CarSpot.lk</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.account-layout { display:grid; grid-template-columns:260px 1fr; gap:28px; align-items:start; }
+.account-sidebar { background:white; border-radius:16px; border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow); position:sticky; top:84px; }
+.sidebar-profile { background:linear-gradient(135deg,var(--primary),#1d4ed8); padding:28px 22px; text-align:center; }
+.sidebar-avatar { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.15); border:3px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 12px; }
+.sidebar-name { color:white; font-weight:800; font-size:16px; margin-bottom:4px; }
+.sidebar-role { display:inline-block; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; margin-top:4px; }
+.sidebar-nav { padding:10px 0; }
+.sidebar-nav-item { display:flex; align-items:center; gap:12px; padding:12px 20px; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; border:none; background:none; width:100%; text-align:left; border-left:3px solid transparent; transition:all 0.15s; text-decoration:none; }
+.sidebar-nav-item:hover { background:#f0f4ff; color:var(--primary-light); }
+.sidebar-nav-item.active { background:#eff6ff; color:var(--primary-light); border-left-color:var(--primary-light); }
+.sidebar-nav-item .icon { font-size:18px; width:24px; text-align:center; }
+.sidebar-nav-divider { height:1px; background:var(--border); margin:6px 0; }
+.panel-card { background:white; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:20px; }
+.panel-card-header { padding:20px 26px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.panel-card-header h3 { font-size:17px; font-weight:800; margin:0; }
+.panel-card-body { padding:26px; }
+.stat-chips { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+.stat-chip { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px 18px; text-align:center; min-width:100px; }
+.stat-chip-num { font-size:22px; font-weight:900; color:var(--primary-light); }
+.stat-chip-label { font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px; margin-top:2px; }
+.review-card { border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; transition:box-shadow 0.15s; }
+.review-card:hover { box-shadow:var(--shadow); }
+.booking-row { border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+@media(max-width:768px){ .account-layout{grid-template-columns:1fr;} .account-sidebar{position:static;} }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<!-- Page Banner -->
+<div style="background:linear-gradient(135deg,var(--primary) 0%,var(--primary-mid) 50%,#1d4ed8 100%);padding:32px 0 28px;color:white">
+  <div class="container">
+    <h1 style="font-size:26px;font-weight:900;margin-bottom:4px" id="bannerTitle">My Account</h1>
+    <p style="font-size:14px;opacity:0.75" id="bannerSub">Manage your profile, requests, payments and reviews</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:28px;padding-bottom:60px">
+  <div class="account-layout">
+
+    <!-- Sidebar -->
+    <div class="account-sidebar">
+      <div class="sidebar-profile">
+        <div class="sidebar-avatar" id="sidebarIcon">👤</div>
+        <div class="sidebar-name" id="sidebarName">Loading...</div>
+        <div id="sidebarRoleBadge"></div>
+      </div>
+      <div class="sidebar-nav">
+        <button class="sidebar-nav-item active" id="tab-profile" onclick="showTab('profile')"><span class="icon">👤</span> My Profile</button>
+        <button class="sidebar-nav-item" id="tab-requests" onclick="showTab('requests')"><span class="icon">📋</span> My Requests</button>
+        <button class="sidebar-nav-item" id="tab-payments" onclick="showTab('payments')"><span class="icon">💳</span> Payment Cards</button>
+        <button class="sidebar-nav-item" id="tab-reviews" onclick="showTab('reviews')"><span class="icon">⭐</span> My Reviews</button>
+        <div class="sidebar-nav-divider"></div>
+        <button class="sidebar-nav-item" style="color:var(--danger)" onclick="logout()"><span class="icon">🚪</span> Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div>
+      <div id="alertBox" style="margin-bottom:16px"></div>
+
+      <!-- ── PROFILE TAB ── -->
+      <div id="panel-profile">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>👤 Personal Information</h3>
+            <span id="profileRoleChip"></span>
+          </div>
+          <div class="panel-card-body">
+            <form onsubmit="updateProfile(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <div class="input-icon-wrap"><span class="icon">👤</span>
+                    <input class="form-input" id="profileName" placeholder="Your full name">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Phone Number</label>
+                  <div class="input-icon-wrap"><span class="icon">📞</span>
+                    <input class="form-input" id="profilePhone" placeholder="+94 77 000 0000">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <div class="input-icon-wrap"><span class="icon">✉️</span>
+                  <input class="form-input" type="email" id="profileEmail">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">City / Address</label>
+                <div class="input-icon-wrap"><span class="icon">📍</span>
+                  <input class="form-input" id="profileAddress" placeholder="Colombo, Kandy...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Password <span style="color:var(--muted);font-weight:400">(leave blank to keep current)</span></label>
+                <div class="input-icon-wrap"><span class="icon">🔒</span>
+                  <input class="form-input" type="password" id="profilePassword" placeholder="Min 6 characters">
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button type="submit" class="btn btn-primary" id="saveBtn">💾 Save Changes</button>
+                <button type="button" class="btn btn-ghost" onclick="deleteAccount()">🗑 Delete Account</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REQUESTS TAB ── -->
+      <div id="panel-requests" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>📋 My Purchase Requests</h3>
+            <a href="browse.html" class="btn btn-accent btn-sm">🔍 Browse Cars</a>
+          </div>
+          <div class="panel-card-body">
+            <!-- Status filter -->
+            <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm" id="filter-all" onclick="filterBookings('')">All</button>
+              <button class="btn btn-ghost btn-sm" id="filter-PENDING" onclick="filterBookings('PENDING')">⏳ Pending</button>
+              <button class="btn btn-ghost btn-sm" id="filter-CONFIRMED" onclick="filterBookings('CONFIRMED')">✅ Confirmed</button>
+              <button class="btn btn-ghost btn-sm" id="filter-SOLD" onclick="filterBookings('SOLD')">🤝 Sold</button>
+              <button class="btn btn-ghost btn-sm" id="filter-REJECTED" onclick="filterBookings('REJECTED')">❌ Rejected</button>
+            </div>
+            <div id="requestsList"><div class="loading-wrap"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAYMENTS TAB ── -->
+      <div id="panel-payments" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>💳 Payment Cards</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddCard()">+ Add Card</button>
+          </div>
+          <div class="panel-card-body">
+            <div id="cardsList"><div class="loading-wrap"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REVIEWS TAB ── -->
+      <div id="panel-reviews" style="display:none">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>⭐ My Reviews</h3>
+            <span style="font-size:12px;color:var(--muted)">Only you can edit or delete your own reviews</span>
+          </div>
+          <div class="panel-card-body">
+            <!-- Reviews written BY me -->
+            <h4 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Reviews I've Written</h4>
+            <div id="reviewsWritten"><div class="loading-wrap"><div class="spinner"></div></div></div>
+            <hr class="divider">
+            <!-- Reviews written ABOUT me -->
+            <h4 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Reviews About Me</h4>
+            <div id="reviewsAboutMe"><div class="loading-wrap"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Add Card Modal -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCardModal()">×</button>
+    <h3 class="modal-title">💳 Add Payment Card</h3>
+    <div id="cardAlert"></div>
+    <div class="form-group"><label class="form-label">Card Holder Name</label>
+      <input class="form-input" id="cardHolder" placeholder="Name as on card"></div>
+    <div class="form-group"><label class="form-label">Card Number</label>
+      <input class="form-input" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Expiry Month</label>
+        <input class="form-input" id="expMonth" placeholder="MM" maxlength="2"></div>
+      <div class="form-group"><label class="form-label">Expiry Year</label>
+        <input class="form-input" id="expYear" placeholder="YY" maxlength="2"></div>
+    </div>
+    <div class="form-group"><label class="form-label">CVV</label>
+      <input class="form-input" type="password" id="cvv" placeholder="***" maxlength="4"></div>
+    <button class="btn btn-primary btn-full" onclick="addCard()">💳 Save Card</button>
+  </div>
+</div>
+
+<!-- Edit Review Modal -->
+<div class="modal-overlay" id="editReviewModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEditReview()">×</button>
+    <h3 class="modal-title">✏️ Edit Your Review</h3>
+    <div id="editReviewAlert"></div>
+    <input type="hidden" id="editReviewId">
+    <div class="form-group">
+      <label class="form-label">Rating</label>
+      <div id="editStarPicker" style="font-size:34px;cursor:pointer;letter-spacing:4px">
+        <span onclick="setEditRating(1)">☆</span><span onclick="setEditRating(2)">☆</span>
+        <span onclick="setEditRating(3)">☆</span><span onclick="setEditRating(4)">☆</span>
+        <span onclick="setEditRating(5)">☆</span>
+      </div>
+      <input type="hidden" id="editRating">
+    </div>
+    <div class="form-group"><label class="form-label">Comment</label>
+      <textarea class="form-textarea" id="editComment"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="saveEditReview()">Save Changes</button>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+let myBookings = [], activeFilter = '';
+let myUserId = null;
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const ok = await requireAuth();
+    if (!ok) return;
+    renderNavbar();
+    setupSidebar();
+    loadProfile();
+});
+
+function setupSidebar() {
+    const name = currentUser?.name || 'User';
+    const role = (currentRole || 'BUYER').toUpperCase();
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('bannerTitle').textContent = `Welcome, ${name.split(' ')[0]}!`;
+    const icons = { BUYER:'🛒', SELLER:'🏷', DEALER:'🏢', ADMIN:'⚙️', SUPERADMIN:'👑' };
+    document.getElementById('sidebarIcon').textContent = icons[role] || '👤';
+    document.getElementById('sidebarRoleBadge').innerHTML = roleBadge(role);
+    document.getElementById('profileRoleChip').innerHTML = roleBadge(role);
+}
+
+function showTab(tab) {
+    ['profile','requests','payments','reviews'].forEach(t => {
+        document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
+        const el = document.getElementById('tab-' + t);
+        if (el) el.classList.toggle('active', t === tab);
+    });
+    if (tab === 'requests') loadBookings();
+    if (tab === 'payments') loadCards();
+    if (tab === 'reviews')  loadReviews();
+}
+
+// ── PROFILE ──────────────────────────────
+async function loadProfile() {
+    const { ok, data } = await api('GET', '/api/account/me');
+    if (!ok) return;
+    const u = data.user;
+    myUserId = u.id;
+    document.getElementById('profileName').value    = u.name    || '';
+    document.getElementById('profileEmail').value   = u.email   || '';
+    document.getElementById('profilePhone').value   = u.phone   || '';
+    document.getElementById('profileAddress').value = u.address || '';
+}
+
+async function updateProfile(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    const { ok, data } = await api('PUT', '/api/account/me', {
+        name:     document.getElementById('profileName').value,
+        email:    document.getElementById('profileEmail').value,
+        phone:    document.getElementById('profilePhone').value,
+        address:  document.getElementById('profileAddress').value,
+        password: document.getElementById('profilePassword').value
+    });
+    btn.disabled = false; btn.textContent = '💾 Save Changes';
+    showAlert('alertBox', ok ? 'Profile updated successfully!' : data.message || 'Update failed.', ok ? 'success' : 'error');
+    if (ok) { await checkAuth(); setupSidebar(); renderNavbar(); }
+}
+
+async function deleteAccount() {
+    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+    const { ok } = await api('DELETE', '/api/account/me');
+    if (ok) window.location.href = 'index.html';
+}
+
+// ── REQUESTS ─────────────────────────────
+async function loadBookings() {
+    document.getElementById('requestsList').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+    const { ok, data } = await api('GET', '/api/bookings/mine/customer');
+    myBookings = data.bookings || [];
+    renderBookings();
+}
+
+function filterBookings(status) {
+    activeFilter = status;
+    const key = status || 'all';
+    ['all','PENDING','CONFIRMED','SOLD','REJECTED'].forEach(s =>
+        document.getElementById('filter-'+s)?.classList.toggle('btn-primary', s === key) ||
+        document.getElementById('filter-'+s)?.classList.toggle('btn-ghost', s !== key));
+    renderBookings();
+}
+
+function renderBookings() {
+    const list = activeFilter ? myBookings.filter(b => b.status === activeFilter) : myBookings;
+    const el = document.getElementById('requestsList');
+    if (!list.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No requests found.<br><a href="browse.html" style="color:var(--primary-light);font-weight:700">Browse cars →</a></p></div>`;
+        return;
+    }
+    const statusStyle = {
+        PENDING:   { bg:'#fef9c3', color:'#854d0e', icon:'⏳' },
+        CONFIRMED: { bg:'#dbeafe', color:'#1e40af', icon:'✅' },
+        SOLD:      { bg:'#d1fae5', color:'#065f46', icon:'🤝' },
+        REJECTED:  { bg:'#fee2e2', color:'#991b1b', icon:'❌' },
+    };
+    el.innerHTML = list.map(b => {
+        const s = statusStyle[b.status] || { bg:'#f1f5f9', color:'#475569', icon:'•' };
+        return `
+        <div class="booking-row" style="display:flex;gap:14px;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:14px;margin-bottom:5px">
+              ${b.vehicleTitle || ('Vehicle #' + b.vehicleId)}
+              ${b.status === 'COUNTERED' ? `<span style="background:#ede9fe;color:#4c1d95;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-left:6px">💬 COUNTER OFFER</span>` : ''}
+              <span style="background:${s.bg};color:${s.color};padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px">${s.icon} ${b.status}</span>
+              ${b.paid ? '<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:4px">💳 PAID</span>' : ''}
+            </div>
+            <div style="font-size:13px;color:var(--muted)">
+              Seller: <strong>${b.sellerName || ('Seller #' + b.sellerId)}</strong>
+              &nbsp;·&nbsp; Offer: <strong style="color:var(--primary-light)">${formatPrice(b.offerAmount)}</strong>
+              &nbsp;·&nbsp; ${formatDate(b.createdAt)}
+            </div>
+            ${b.offerMessage ? `<div style="font-size:12px;color:var(--muted);font-style:italic;margin-top:4px">"${b.offerMessage}"</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+            ${b.status === 'PENDING' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>` : ''}
+            ${b.status === 'COUNTERED' ? `
+              <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:8px;padding:8px 12px;margin-top:6px;font-size:13px">
+                <strong>Seller's counter-offer: ${formatPrice(b.counterAmount)}</strong>
+                ${b.sellerNote ? `<br><em style="color:var(--muted)">"${b.sellerNote}"</em>` : ''}
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-success btn-sm" onclick="acceptCounter(${b.id})">✓ Accept Counter</button>
+                <button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">✗ Cancel</button>
+              </div>` : ''}
+            ${b.status === 'CONFIRMED' && !b.paid ? `<button class="btn btn-success btn-sm" onclick="payBooking(${b.id})">💳 Pay Now</button>` : ''}
+            ${b.status === 'SOLD' ? `<button class="btn btn-outline btn-sm" onclick="openReviewFromBooking(${b.id}, ${b.vehicleId})">⭐ Review</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+}
+
+async function cancelBooking(id) {
+    if (!confirm('Cancel this purchase request?')) return;
+    const { ok, data } = await api('DELETE', `/api/bookings/${id}`);
+    showAlert('alertBox', ok ? 'Cancelled.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadBookings();
+}
+
+async function payBooking(id) {
+    const { data: cd } = await api('GET', '/api/payments/cards');
+    const cards = cd.cards || [];
+    if (!cards.length) {
+        showAlert('alertBox', 'Please add a payment card first in the Payment Cards tab.', 'warning');
+        showTab('payments'); return;
+    }
+    if (!confirm(`Pay with card ${cards[0].cardNumber}?`)) return;
+    const { ok, data } = await api('POST', `/api/payments/bookings/${id}/pay`, { cardId: cards[0].id });
+    showAlert('alertBox', ok ? 'Payment successful! The seller can now mark this as sold.' : data.message || 'Failed.', ok ? 'success' : 'error');
+    if (ok) loadBookings();
+}
+
+async function openReviewFromBooking(bookingId, vehicleId) {
+    // find the booking to get sellerId
+    const booking = myBookings.find(b => b.id === bookingId);
+    if (!booking) return;
+    // open review modal for the seller
+    openEditReview(null, null, booking.sellerId, 'seller');
+}
+
+// ── PAYMENTS ──────────────────────────────
+async function loadCards() {
+    const { data } = await api('GET', '/api/payments/cards');
+    const cards = data.cards || [];
+    const el = document.getElementById('cardsList');
+    if (!cards.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">💳</div><p>No cards saved yet.<br><small>Add a card to make payments.</small></p><button class="btn btn-primary" style="margin-top:12px" onclick="openAddCard()">+ Add Card</button></div>`;
+        return;
+    }
+    el.innerHTML = cards.map(c => `
+        <div style="border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:white">
+          <div>
+            <div style="font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:6px">💳 ${c.cardNumber}</div>
+            <div style="font-size:12px;opacity:0.8">${c.cardHolderName} &bull; ${c.expiryMonth}/${c.expiryYear}</div>
+          </div>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3)" onclick="deleteCard(${c.id})">Remove</button>
+        </div>`).join('');
+}
+
+function openAddCard() { document.getElementById('cardModal').classList.add('active'); }
+function closeCardModal() { document.getElementById('cardModal').classList.remove('active'); }
+
+async function addCard() {
+    const { ok, data } = await api('POST', '/api/payments/cards', {
+        cardHolderName: document.getElementById('cardHolder').value,
+        cardNumber:     document.getElementById('cardNumber').value,
+        expiryMonth:    document.getElementById('expMonth').value,
+        expiryYear:     document.getElementById('expYear').value,
+        cvv:            document.getElementById('cvv').value
+    });
+    if (ok) { closeCardModal(); loadCards(); showAlert('alertBox','Card added!','success'); }
+    else showAlert('cardAlert', data.message || 'Failed to add card.');
+}
+
+async function deleteCard(id) {
+    if (!confirm('Remove this card?')) return;
+    await api('DELETE', `/api/payments/cards/${id}`);
+    loadCards();
+}
+
+// ── REVIEWS ───────────────────────────────
+async function loadReviews() {
+    // Reviews I wrote
+    const { data: wd } = await api('GET', '/api/reviews/mine/customer');
+    renderWrittenReviews(wd.reviews || []);
+
+    // Reviews about me (as a buyer)
+    const me = await api('GET', '/api/account/me');
+    const myId = me.data?.user?.id;
+    if (myId) {
+        const { data: ad } = await api('GET', `/api/reviews/buyer/${myId}`);
+        renderAboutMeReviews(ad.reviews || []);
+    }
+}
+
+function renderWrittenReviews(reviews) {
+    const el = document.getElementById('reviewsWritten');
+    if (!reviews.length) {
+        el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:32px">✍️</div><p style="font-size:13px">You haven't written any reviews yet.</p></div>`;
+        return;
+    }
+    el.innerHTML = reviews.map(r => `
+        <div class="review-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <span style="color:var(--accent);font-size:16px">${renderStars(r.rating)}</span>
+              <span class="badge badge-${(r.targetType||'').toLowerCase()}" style="margin-left:8px">${r.targetType==='seller'?'Seller ':r.targetType==='buyer'?'Buyer ':' Vehicle '}#${r.targetId}</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openEditReview(${r.id}, ${r.rating}, null, null, '${r.comment?.replace(/'/g,"\\'")||''}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteReview(${r.id})">Delete</button>
+            </div>
+          </div>
+          <p style="font-size:13.5px;color:var(--text);line-height:1.65">${r.comment||''}</p>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">${formatDate(r.createdAt)}</div>
+        </div>`).join('');
+}
+
+function renderAboutMeReviews(reviews) {
+    const el = document.getElementById('reviewsAboutMe');
+    if (!reviews.length) {
+        el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:32px">⭐</div><p style="font-size:13px">No reviews about you yet.</p></div>`;
+        return;
+    }
+    el.innerHTML = reviews.map(r => `
+        <div class="review-card" style="background:var(--bg)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="color:var(--accent);font-size:16px">${renderStars(r.rating)}</span>
+            <span style="font-size:11px;color:var(--muted)">${formatDate(r.createdAt)}</span>
+          </div>
+          <p style="font-size:13.5px;color:var(--text);line-height:1.65">${r.comment||''}</p>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">From Seller #${r.reviewerId}</div>
+        </div>`).join('');
+}
+
+async function deleteReview(id) {
+    if (!confirm('Delete this review?')) return;
+    const { ok, data } = await api('DELETE', `/api/reviews/${id}`);
+    if (ok) { showAlert('alertBox','Review deleted.','success'); loadReviews(); }
+    else showAlert('alertBox', data.message || 'Failed.', 'error');
+}
+
+// Edit Review Modal
+function openEditReview(reviewId, currentRating, targetId, targetType, currentComment) {
+    document.getElementById('editReviewId').value = reviewId || '';
+    document.getElementById('editComment').value  = currentComment || '';
+    document.getElementById('editRating').value   = currentRating || 0;
+    setEditRating(currentRating || 0);
+    // store targetId/type for new reviews
+    document.getElementById('editReviewModal').dataset.targetId   = targetId || '';
+    document.getElementById('editReviewModal').dataset.targetType = targetType || '';
+    document.getElementById('editReviewModal').classList.add('active');
+}
+function closeEditReview() { document.getElementById('editReviewModal').classList.remove('active'); }
+
+function setEditRating(val) {
+    document.getElementById('editRating').value = val;
+    document.querySelectorAll('#editStarPicker span').forEach((s,i) => {
+        s.textContent = i < val ? '★' : '☆';
+        s.style.color = i < val ? 'var(--accent)' : 'var(--border)';
+    });
+}
+
+async function saveEditReview() {
+    const id      = document.getElementById('editReviewId').value;
+    const rating  = parseInt(document.getElementById('editRating').value);
+    const comment = document.getElementById('editComment').value.trim();
+    const modal   = document.getElementById('editReviewModal');
+    if (!rating)  { showAlert('editReviewAlert','Please select a rating.'); return; }
+    if (!comment) { showAlert('editReviewAlert','Please write a comment.'); return; }
+
+    let ok, data;
+    if (id) {
+        // Edit existing review
+        ({ ok, data } = await api('PUT', `/api/reviews/${id}`, { rating, comment }));
+    } else {
+        // New review (from booking)
+        const targetId   = modal.dataset.targetId;
+        const targetType = modal.dataset.targetType;
+        ({ ok, data } = await api('POST', '/api/reviews', { targetId: parseInt(targetId), targetType, rating, comment }));
+    }
+    if (ok) { closeEditReview(); showAlert('alertBox','Review saved!','success'); loadReviews(); }
+    else showAlert('editReviewAlert', data.message || 'Failed.');
+}
+
+async function acceptCounter(bookingId) {
+    if (!confirm('Accept the seller\'s counter-offer?')) return;
+    const { ok, data } = await api('POST', `/api/bookings/${bookingId}/accept-counter`);
+    showAlert('alertBox', ok ? 'Counter-offer accepted! You can now pay.' : data.message || 'Failed.',
+              ok ? 'success' : 'error');
+    if (ok) loadBookings();
+}
+
+</script>
+</body>
+</html>
