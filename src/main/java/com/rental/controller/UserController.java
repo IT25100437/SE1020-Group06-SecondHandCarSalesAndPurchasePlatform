@@ -1,5 +1,5 @@
 package com.rental.controller;
-//done
+//done.
 import com.rental.model.Admin;
 import com.rental.model.Seller;
 import com.rental.service.AdminService;
