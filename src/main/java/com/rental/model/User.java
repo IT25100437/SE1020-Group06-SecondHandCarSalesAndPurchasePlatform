@@ -1,5 +1,5 @@
 package com.rental.model;
-//done
+//done.
 import java.time.LocalDateTime;
 
 // Component 01: User Management
