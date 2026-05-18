@@ -1,0 +1,2 @@
+1|seller1||seller1@gmail.com|seller1||individual|||true
+2|dealer1||dealer1@gmail.com|dealer1||dealer|||true
